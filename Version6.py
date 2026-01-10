@@ -11,7 +11,7 @@ Vec3 = Tuple[float, float, float]  # (x, y, z)
 
 
 @dataclass(frozen=True)
-class Duese:
+class Düse:
     name: str
     pos: Vec3
     kraft: str  # "u" = unten, "s" = seite
@@ -21,26 +21,26 @@ class Duese:
 # x = vorne, y = links, z = oben
 Ursprung: Vec3 = (0.0, 0.0, 0.0)
 
-# Duesen "Datenbank"
-# Zugriff z.B.: print(duesen["DueseU1"].pos[0])
-duesen: Dict[str, Duese] = {   #   x    y    z
-    "DueseU1": Duese("DueseU1", (10.0, 10.0, 0.0), "u"),
-    "DueseU2": Duese("DueseU2", (10.0, 20.0, 0.0), "u"),
-    "DueseU3": Duese("DueseU3", (10.0, 30.0, 0.0), "u"),
-    "DueseU4": Duese("DueseU4", (20.0, 10.0, 0.0), "u"),
-    "DueseU5": Duese("DueseU5", (20.0, 20.0, 0.0), "u"),
-    "DueseU6": Duese("DueseU6", (20.0, 30.0, 0.0), "u"),
-    "DueseU7": Duese("DueseU7", (30.0, 10.0, 0.0), "u"),
-    "DueseU8": Duese("DueseU8", (30.0, 20.0, 0.0), "u"),
+# Düsen "Datenbank"
+# Zugriff z.B.: print(düsen["DüseU1"].pos[0])
+düsen: Dict[str, Düse] = {   #   x    y    z
+    "DüseU1": Düse("DüseU1", (10.0, 10.0, 0.0), "u"),
+    "DüseU2": Düse("DüseU2", (10.0, 20.0, 0.0), "u"),
+    "DüseU3": Düse("DüseU3", (10.0, 30.0, 0.0), "u"),
+    "DüseU4": Düse("DüseU4", (20.0, 10.0, 0.0), "u"),
+    "DüseU5": Düse("DüseU5", (20.0, 20.0, 0.0), "u"),
+    "DüseU6": Düse("DüseU6", (20.0, 30.0, 0.0), "u"),
+    "DüseU7": Düse("DüseU7", (30.0, 10.0, 0.0), "u"),
+    "DüseU8": Düse("DüseU8", (30.0, 20.0, 0.0), "u"),
 
-    "DueseO1": Duese("DueseO1", (0.0, 10.0, 10.0), "s"),
-    "DueseO2": Duese("DueseO2", (0.0, 20.0, 10.0), "s"),
-    "DueseO3": Duese("DueseO3", (0.0, 30.0, 10.0), "s"),
-    "DueseO4": Duese("DueseO4", (0.0, 10.0, 20.0), "s"),
-    "DueseO5": Duese("DueseO5", (0.0, 20.0, 20.0), "s"),
-    "DueseO6": Duese("DueseO6", (0.0, 30.0, 20.0), "s"),
-    "DueseO7": Duese("DueseO7", (0.0, 10.0, 30.0), "s"),
-    "DueseO8": Duese("DueseO8", (0.0, 20.0, 30.0), "s"),
+    "DüseO1": Düse("DüseO1", (0.0, 10.0, 10.0), "s"),
+    "DüseO2": Düse("DüseO2", (0.0, 20.0, 10.0), "s"),
+    "DüseO3": Düse("DüseO3", (0.0, 30.0, 10.0), "s"),
+    "DüseO4": Düse("DüseO4", (0.0, 10.0, 20.0), "s"),
+    "DüseO5": Düse("DüseO5", (0.0, 20.0, 20.0), "s"),
+    "DüseO6": Düse("DüseO6", (0.0, 30.0, 20.0), "s"),
+    "DüseO7": Düse("DüseO7", (0.0, 10.0, 30.0), "s"),
+    "DüseO8": Düse("DüseO8", (0.0, 20.0, 30.0), "s"),
 }
 
 
@@ -59,7 +59,6 @@ def load_mesh(path: str) -> trimesh.Trimesh:
         raise TypeError(f"Datei konnte nicht als Mesh geladen werden: {path}")
 
     return obj
-
 
 
 def rot_z_90k(k: int) -> np.ndarray:
@@ -144,36 +143,30 @@ def positionieren24() -> list[tuple[np.ndarray, str]]:
 
     return positions
 
-def build_origin_marker(origin: Vec3, size_ref: float) -> trimesh.Trimesh:
-    parts = []
-    base = max(2.0, size_ref * 0.05)
-    origin_radius = base
-    # Ursprung als Kugel + Achskreuz
-    parts.append(trimesh.creation.icosphere(subdivisions=2, radius=origin_radius, center=origin))
-    parts.append(trimesh.creation.box(extents=(base * 3, base * 0.6, base * 0.6), transform=trimesh.transformations.translation_matrix(origin)))
-    parts.append(trimesh.creation.box(extents=(base * 0.6, base * 3, base * 0.6), transform=trimesh.transformations.translation_matrix(origin)))
-    parts.append(trimesh.creation.box(extents=(base * 0.6, base * 0.6, base * 3), transform=trimesh.transformations.translation_matrix(origin)))
-    return trimesh.util.concatenate(parts)
 
-def build_nozzles_mesh(nozzle_map: Dict[str, Duese], size_ref: float) -> trimesh.Trimesh:
-    parts = []
-    base = max(2.0, size_ref * 0.05)
-    radius = base
-    height = base * 2.0
-    for noz in nozzle_map.values():
-        if noz.kraft == "u":
-            axis = np.array([0.0, 0.0, -1.0])  # unten
-        else:
-            axis = np.array([1.0, 0.0, 0.0])   # seite -> nach vorne (+x)
-        center = np.array(noz.pos, dtype=float) + axis * (height * 0.5)
-        cyl = trimesh.creation.cylinder(radius=radius, height=height, sections=32)
-        align = trimesh.geometry.align_vectors([0, 0, 1], axis)
-        if align is None:
-            align = np.eye(4)
-        cyl.apply_transform(align)
-        cyl.apply_translation(center)
-        parts.append(cyl)
-    return trimesh.util.concatenate(parts)
+def print_koordinaten_ursprung_duesen_und_ecken(mesh: trimesh.Trimesh) -> None:
+    print("Ursprung:", Ursprung)
+    print("Duesen:")
+    for name in sorted(düsen.keys()):
+        d = düsen[name]
+        print(f"  {d.name}: {d.pos} ({d.kraft})")
+
+    bounds = mesh.bounds  # [[minx, miny, minz], [maxx, maxy, maxz]]
+    minx, miny, minz = bounds[0]
+    maxx, maxy, maxz = bounds[1]
+    ecken = [
+        (minx, miny, minz),
+        (minx, miny, maxz),
+        (minx, maxy, minz),
+        (minx, maxy, maxz),
+        (maxx, miny, minz),
+        (maxx, miny, maxz),
+        (maxx, maxy, minz),
+        (maxx, maxy, maxz),
+    ]
+    print("Ecken (Bounding-Box):")
+    for idx, e in enumerate(ecken, start=1):
+        print(f"  E{idx}: {e}")
 
 if __name__ == "__main__":
     #  Pfad zu  STL-Datei  
@@ -187,15 +180,10 @@ if __name__ == "__main__":
     # Mesh laden und ein paar Infos ausgeben
     m = load_mesh(str(pfad_teil1))
     print("Mesh geladen!")
+    print_koordinaten_ursprung_duesen_und_ecken(m)
 
 
     rotations = positionieren24()   # Liste mit 24 Matrizen (3x3)
-    size_ref = float((m.bounds[1] - m.bounds[0]).max())
-    origin_marker = build_origin_marker(Ursprung, size_ref)
-    nozzles_mesh = build_nozzles_mesh(duesen, size_ref)
-
-
-
 
     out_dir = Path(r"C:\Users\micha\Desktop\Bachelorarbeit\Programmierung\Cad Modelle\Modelle1")
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -207,41 +195,18 @@ if __name__ == "__main__":
 
         m_rot = m.copy()     # Kopie, Original bleibt unverändert
         m_rot.apply_transform(T)
-        # right-back-bottom corner to origin: max x (back), max y (right), min z (bottom)
-        bounds = m_rot.bounds
-        corner = np.array([bounds[1][0], bounds[1][1], bounds[0][2]])
-        offset = -corner
-        m_rot.apply_translation(offset)
 
-        # Move nozzles with the same offset; origin marker stays at (0, 0, 0).
-        nozzles_view = nozzles_mesh.copy()
-        nozzles_view.apply_translation(offset)
-        export_mesh = trimesh.util.concatenate([m_rot, origin_marker, nozzles_view])
+        # Ecke "rechts-hinten-unten" (E5) der aktuellen Position auf den Ursprung verschieben
+        bounds = m_rot.bounds
+        minx, miny, minz = bounds[0]
+        maxx, maxy, maxz = bounds[1]
+        e5 = np.array([maxx, miny, minz], dtype=float)
+        T_shift = np.eye(4)
+        T_shift[:3, 3] = -e5
+        m_rot.apply_transform(T_shift)
 
         out_path = out_dir / f"{base_name}_pos{position_id:02d}_{label}.stl"
-        export_mesh.export(out_path)
+        m_rot.export(out_path)
         print("Exportiert:", out_path)
 
-        if position_id == 1 and label == "x0_z0":
-            bmin, bmax = m_rot.bounds
-            corners = [
-                (bmin[0], bmin[1], bmin[2]),
-                (bmin[0], bmin[1], bmax[2]),
-                (bmin[0], bmax[1], bmin[2]),
-                (bmin[0], bmax[1], bmax[2]),
-                (bmax[0], bmin[1], bmin[2]),
-                (bmax[0], bmin[1], bmax[2]),
-                (bmax[0], bmax[1], bmin[2]),
-                (bmax[0], bmax[1], bmax[2]),
-            ]
-            print("Ecken Test-Bauteil1_pos01_x0_z0:")
-            for i, c in enumerate(corners, start=1):
-                print(f"  Ecke {i}: {c}")
-            print("Ursprung:", (0.0, 0.0, 0.0))
-            print("Duesen (fixes Koordinatensystem):")
-            for name, d in duesen.items():
-                print(f"  {name}: {d.pos}")
-
     # Anzeige entfernt; Export der Dateien reicht.
-
-    

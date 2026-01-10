@@ -207,16 +207,8 @@ if __name__ == "__main__":
 
         m_rot = m.copy()     # Kopie, Original bleibt unverändert
         m_rot.apply_transform(T)
-        # right-back-bottom corner to origin: max x (back), max y (right), min z (bottom)
-        bounds = m_rot.bounds
-        corner = np.array([bounds[1][0], bounds[1][1], bounds[0][2]])
-        offset = -corner
-        m_rot.apply_translation(offset)
-
-        # Move nozzles with the same offset; origin marker stays at (0, 0, 0).
-        nozzles_view = nozzles_mesh.copy()
-        nozzles_view.apply_translation(offset)
-        export_mesh = trimesh.util.concatenate([m_rot, origin_marker, nozzles_view])
+        # Keine zusätzliche Verschiebung: Original-Koordinaten beibehalten.
+        export_mesh = trimesh.util.concatenate([m_rot, origin_marker, nozzles_mesh])
 
         out_path = out_dir / f"{base_name}_pos{position_id:02d}_{label}.stl"
         export_mesh.export(out_path)
