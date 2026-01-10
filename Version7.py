@@ -14,7 +14,7 @@ CylinderHeight = 4.0
 
 
 @dataclass(frozen=True)
-class Düse:
+class Duse:
     name: str
     pos: Vec3
     kraft: str  # "u" = unten, "s" = seite
@@ -24,26 +24,26 @@ class Düse:
 # x = vorne, y = links, z = oben
 Ursprung: Vec3 = (0.0, 0.0, 0.0)
 
-# Düsen "Datenbank"
-# Zugriff z.B.: print(düsen["DüseU1"].pos[0])
-düsen: Dict[str, Düse] = {   #   x    y    z
-    "DüseU1": Düse("DüseU1", (-10.0, 0.0, 10.0), "u"),
-    "DüseU2": Düse("DüseU2", (-20.0, 0.0, 10.0), "u"),
-    "DüseU3": Düse("DüseU3", (-30.0, 0.0, 10.0), "u"),
-    "DüseU4": Düse("DüseU4", (-10.0, 0.0, 20.0), "u"),
-    "DüseU5": Düse("DüseU5", (-20.0, 0.0, 20.0), "u"),
-    "DüseU6": Düse("DüseU6", (-30.0, 0.0, 20.0), "u"),
-    "DüseU7": Düse("DüseU7", (-10.0, 0.0, 30.0), "u"),
-    "DüseU8": Düse("DüseU8", (-20.0, 0.0, 30.0), "u"),
+# Dusen "Datenbank"
+# Zugriff z.B.: print(duesen["DuseU1"].pos[0])
+duesen: Dict[str, Duse] = {   #   x    y    z
+    "DuseU1": Duse("DuseU1", (10.0, 10.0, 0.0), "u"),
+    "DuseU2": Duse("DuseU2", (10.0, 20.0, 0.0), "u"),
+    "DuseU3": Duse("DuseU3", (10.0, 30.0, 0.0), "u"),
+    "DuseU4": Duse("DuseU4", (20.0, 10.0, 0.0), "u"),
+    "DuseU5": Duse("DuseU5", (20.0, 20.0, 0.0), "u"),
+    "DuseU6": Duse("DuseU6", (20.0, 30.0, 0.0), "u"),
+    "DuseU7": Duse("DuseU7", (30.0, 10.0, 0.0), "u"),
+    "DuseU8": Duse("DuseU8", (30.0, 20.0, 0.0), "u"),
 
-    "DüseO1": Düse("DüseO1", (-10.0, 10.0, 0.0), "s"),
-    "DüseO2": Düse("DüseO2", (-20.0, 10.0, 0.0), "s"),
-    "DüseO3": Düse("DüseO3", (-30.0, 10.0, 0.0), "s"),
-    "DüseO4": Düse("DüseO4", (-10.0, 20.0, 0.0), "s"),
-    "DüseO5": Düse("DüseO5", (-20.0, 20.0, 0.0), "s"),
-    "DüseO6": Düse("DüseO6", (-30.0, 20.0, 0.0), "s"),
-    "DüseO7": Düse("DüseO7", (-10.0, 30.0, 0.0), "s"),
-    "DüseO8": Düse("DüseO8", (-20.0, 30.0, 0.0), "s"),
+    "DuseO1": Duse("DuseO1", (0.0, 10.0, 10.0), "s"),
+    "DuseO2": Duse("DuseO2", (0.0, 20.0, 10.0), "s"),
+    "DuseO3": Duse("DuseO3", (0.0, 30.0, 10.0), "s"),
+    "DuseO4": Duse("DuseO4", (0.0, 10.0, 20.0), "s"),
+    "DuseO5": Duse("DuseO5", (0.0, 20.0, 20.0), "s"),
+    "DuseO6": Duse("DuseO6", (0.0, 30.0, 20.0), "s"),
+    "DuseO7": Duse("DuseO7", (0.0, 10.0, 30.0), "s"),
+    "DuseO8": Duse("DuseO8", (0.0, 20.0, 30.0), "s"),
 }
 
 
@@ -207,6 +207,12 @@ if __name__ == "__main__":
     m.apply_transform(flip_z)
     print("Mesh geladen!")
 
+
+    cm_rounded = tuple(round(v, 5) for v in m.center_mass) # Schwerpunkt berechnen
+    print(f"Schwerpunkt (center_mass): {cm_rounded}")
+    if not m.is_watertight:
+        print("Hinweis: Mesh ist nicht wasserdicht, Schwerpunkt kann ungenau sein.")
+
     echte_geo = echte_kanten_und_ecken(m, angle_deg=90.0, tol_deg=1.0)  #print für die Konsole
     print(f"Echte Kanten: {len(echte_geo['edge_indices'])}")
     print(f"Echte Ecken: {len(echte_geo['corner_indices'])}")
@@ -216,13 +222,13 @@ if __name__ == "__main__":
         print(f"  K{idx}: {p_rounded}")
 
 
-    print("Duesen (Weltkoordinaten):") # print Koordinaten der Düsen
-    for name in sorted(düsen.keys()):
-        d = düsen[name]
+    print("Duesen (Weltkoordinaten):") # print Koordinaten der Dusen
+    for name in sorted(duesen.keys()):
+        d = duesen[name]
         print(f"  {d.name}: {d.pos} ({d.kraft})")
 
-    nozzle_positions = []                 #Düsen-Koordinaten  aus dict werden zu Zylindern
-    for d in düsen.values():
+    nozzle_positions = []                 #Dusen-Koordinaten  aus dict werden zu Zylindern
+    for d in duesen.values():
         p = np.array(d.pos, dtype=float)
         nozzle_positions.append(p)
     nozzle_markers = create_nozzle_cylinders(nozzle_positions)
@@ -286,3 +292,4 @@ print(e1)
 #["ecken"][0] = Ecke E1
 #["ecken"][0][0] = Ecke E1 x-Wert
 
+## weiter geht es mit der Berechnung von Aussparungen und schließlich dem Schwerpunkt
