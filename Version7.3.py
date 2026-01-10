@@ -1,4 +1,4 @@
-﻿from dataclasses import dataclass
+from dataclasses import dataclass
 from typing import Dict, Tuple
 from pathlib import Path
 
@@ -179,15 +179,17 @@ def ecken_und_kanten_aus_bounds(bounds: np.ndarray) -> dict:
 def create_nozzle_cylinders(positions: list[np.ndarray]) -> trimesh.Trimesh | None:
     if not positions:
         return None
-    spheres = []
+    cylinders = []
     for pos in positions:
-        sphere = trimesh.creation.icosphere(
-            subdivisions=2,
+        cyl = trimesh.creation.cylinder(
             radius=CylinderRadius,
+            height=CylinderHeight,
+            sections=16,
         )
-        sphere.apply_translation(pos)
-        spheres.append(sphere)
-    return trimesh.util.concatenate(spheres)
+        cyl.apply_translation([0.0, 0.0, CylinderHeight / 2.0])
+        cyl.apply_translation(pos)
+        cylinders.append(cyl)
+    return trimesh.util.concatenate(cylinders)
 
 if __name__ == "__main__":
     #  Pfad zu  STL-Datei  
@@ -262,9 +264,3 @@ if __name__ == "__main__":
             print(f"  {d.name}: {d.pos} ({d.kraft})")
 
     # Anzeige entfernt; Export der Dateien reicht.
-
-e1 = positionen_koordinaten[0]["ecken"][0][0] 
-#positionen_koordinaten[0] = Pos1
-#["ecken"][0] = Ecke E1
-#["ecken"][0][0] = Ecke E1 x-Wert
-
