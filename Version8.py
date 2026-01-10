@@ -1,4 +1,4 @@
-﻿from dataclasses import dataclass
+from dataclasses import dataclass
 from typing import Dict, Tuple
 from pathlib import Path
 
@@ -27,23 +27,23 @@ Ursprung: Vec3 = (0.0, 0.0, 0.0)
 # Dusen "Datenbank"
 # Zugriff z.B.: print(duesen["DuseU1"].pos[0])
 duesen: Dict[str, Duse] = {   #   x    y    z
-    "DuseU1": Duse("DuseU1", (-10.0, 0.0, 10.0), "u"),
-    "DuseU2": Duse("DuseU2", (-20.0, 0.0, 10.0), "u"),
-    "DuseU3": Duse("DuseU3", (-30.0, 0.0, 10.0), "u"),
-    "DuseU4": Duse("DuseU4", (-10.0, 0.0, 20.0), "u"),
-    "DuseU5": Duse("DuseU5", (-20.0, 0.0, 20.0), "u"),
-    "DuseU6": Duse("DuseU6", (-30.0, 0.0, 20.0), "u"),
-    "DuseU7": Duse("DuseU7", (-10.0, 0.0, 30.0), "u"),
-    "DuseU8": Duse("DuseU8", (-20.0, 0.0, 30.0), "u"),
+    "DuseU1": Duse("DuseU1", (10.0, 10.0, 0.0), "u"),
+    "DuseU2": Duse("DuseU2", (10.0, 20.0, 0.0), "u"),
+    "DuseU3": Duse("DuseU3", (10.0, 30.0, 0.0), "u"),
+    "DuseU4": Duse("DuseU4", (20.0, 10.0, 0.0), "u"),
+    "DuseU5": Duse("DuseU5", (20.0, 20.0, 0.0), "u"),
+    "DuseU6": Duse("DuseU6", (20.0, 30.0, 0.0), "u"),
+    "DuseU7": Duse("DuseU7", (30.0, 10.0, 0.0), "u"),
+    "DuseU8": Duse("DuseU8", (30.0, 20.0, 0.0), "u"),
 
-    "DuseO1": Duse("DuseO1", (-10.0, 10.0, 0.0), "s"),
-    "DuseO2": Duse("DuseO2", (-20.0, 10.0, 0.0), "s"),
-    "DuseO3": Duse("DuseO3", (-30.0, 10.0, 0.0), "s"),
-    "DuseO4": Duse("DuseO4", (-10.0, 20.0, 0.0), "s"),
-    "DuseO5": Duse("DuseO5", (-20.0, 20.0, 0.0), "s"),
-    "DuseO6": Duse("DuseO6", (-30.0, 20.0, 0.0), "s"),
-    "DuseO7": Duse("DuseO7", (-10.0, 30.0, 0.0), "s"),
-    "DuseO8": Duse("DuseO8", (-20.0, 30.0, 0.0), "s"),
+    "DuseO1": Duse("DuseO1", (0.0, 10.0, 10.0), "s"),
+    "DuseO2": Duse("DuseO2", (0.0, 20.0, 10.0), "s"),
+    "DuseO3": Duse("DuseO3", (0.0, 30.0, 10.0), "s"),
+    "DuseO4": Duse("DuseO4", (0.0, 10.0, 20.0), "s"),
+    "DuseO5": Duse("DuseO5", (0.0, 20.0, 20.0), "s"),
+    "DuseO6": Duse("DuseO6", (0.0, 30.0, 20.0), "s"),
+    "DuseO7": Duse("DuseO7", (0.0, 10.0, 30.0), "s"),
+    "DuseO8": Duse("DuseO8", (0.0, 20.0, 30.0), "s"),
 }
 
 
@@ -175,25 +175,6 @@ def echte_kanten_und_ecken(
         "corner_coords": corner_coords,
     }
 
-def kipp_duse(kipp_in: str) -> str | None:
-    if kipp_in == "o_x_p":
-        return "Düse1"
-    if kipp_in == "o_x_n":
-        return "Düse2"
-    if kipp_in == "o_y_p":
-        return "Düse3"
-    if kipp_in == "o_y_n":
-        return "Düse4"
-    if kipp_in == "u_x_p":
-        return "Düse5"
-    if kipp_in == "u_x_n":
-        return "Düse6"
-    if kipp_in == "u_z_p":
-        return "Düse7"
-    if kipp_in == "u_z_n":
-        return "Düse8"
-    return None
-
 def create_nozzle_cylinders(positions: list[np.ndarray]) -> trimesh.Trimesh | None:
     if not positions:
         return None
@@ -302,29 +283,13 @@ if __name__ == "__main__":
         print("Exportiert:", out_path)
 
 
-    if positionen_koordinaten:   # Position abfragen und Koordinatne der Ecken ausgeben 
-        user_in = input("Welche Position fuer Ecken? (1-24): ").strip()
-        try:
-            pos_id = int(user_in)
-        except ValueError:
-            pos_id = 1
-        if pos_id < 1 or pos_id > len(positionen_koordinaten):
-            pos_id = 1
-        pos = positionen_koordinaten[pos_id - 1]
-        print(f"Pos{pos['position_id']:02d} ({pos['label']}) Ecken:")
-        for idx, e in enumerate(pos["ecken"], start=1):
-            e_rounded = tuple(round(v, 5) for v in e)
-            print(f"  E{idx}: {e_rounded}")
-
-        kipp_keys = ["o_x_p", "o_x_n", "o_y_p", "o_y_n", "u_x_p", "u_x_n", "u_z_p", "u_z_n"]
-        kipp_in = input(f"Welche kipp_duse? ({', '.join(kipp_keys)}): ").strip()
-        duse = kipp_duse(kipp_in)
-        if duse is not None:
-            print(f"kipp_duse {kipp_in}: {duse}")
-        else:
-            print("Unbekannte kipp_duse-Auswahl.")
-
+        
     # Anzeige entfernt; Export der Dateien reicht.
 
+e1 = positionen_koordinaten[0]["ecken"][0][0] 
+print(e1)
+#positionen_koordinaten[0] = Pos1
+#["ecken"][0] = Ecke E1
+#["ecken"][0][0] = Ecke E1 x-Wert
 
-
+## weiter geht es mit der Berechnung von Aussparungen und schließlich dem Schwerpunkt
