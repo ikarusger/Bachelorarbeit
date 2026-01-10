@@ -147,34 +147,33 @@ def positionieren24() -> list[tuple[np.ndarray, str]]:
     return positions
 
 
-
-def ecken_und_kanten_aus_bounds(bounds: np.ndarray) -> dict:
-    minx, miny, minz = bounds[0]
-    maxx, maxy, maxz = bounds[1]
-    ecken = [
-        (minx, miny, maxz),  # E1
-        (minx, miny, minz),  # E2
-        (minx, maxy, maxz),  # E3
-        (minx, maxy, minz),  # E4
-        (maxx, miny, maxz),  # E5
-        (maxx, miny, minz),  # E6
-        (maxx, maxy, maxz),  # E7
-        (maxx, maxy, minz),  # E8
-    ]
-    kanten = [
-        (1, 2), (1, 3), (1, 5),
-        (2, 4), (2, 6),
-        (3, 4), (3, 7),
-        (4, 8),
-        (5, 6), (5, 7),
-        (6, 8),
-        (7, 8),
-    ]
-    kanten_coords = [
-        {"edge": (a, b), "from": ecken[a - 1], "to": ecken[b - 1]}
-        for (a, b) in kanten
-    ]
-    return {"ecken": ecken, "kanten": kanten, "kanten_coords": kanten_coords}
+# reale Kanten und Ecken werden bestimmt und Datenstruktur wird angelegt
+def echte_kanten_und_ecken(
+    mesh: trimesh.Trimesh, angle_deg: float = 90.0, tol_deg: float = 1.0
+) -> dict:
+    fa_edges = mesh.face_adjacency_edges
+    fa_angles = mesh.face_adjacency_angles
+    if fa_edges is None or len(fa_edges) == 0:
+        return {"edge_indices": np.empty((0, 2), dtype=int), "corner_indices": np.array([], dtype=int),
+                "edge_coords": [], "corner_coords": []}
+    diff = np.abs(np.degrees(fa_angles) - angle_deg)
+    sharp = fa_edges[diff <= tol_deg]
+    boundary = mesh.edges_boundary if hasattr(mesh, "edges_boundary") else np.empty((0, 2), dtype=int)
+    if boundary is not None and len(boundary) > 0:
+        sharp = np.vstack([sharp, boundary])
+    if len(sharp) == 0:
+        return {"edge_indices": np.empty((0, 2), dtype=int), "corner_indices": np.array([], dtype=int),
+                "edge_coords": [], "corner_coords": []}
+    sharp = np.unique(np.sort(sharp, axis=1), axis=0)
+    corner_idx = np.unique(sharp)
+    edge_coords = [(mesh.vertices[a], mesh.vertices[b]) for a, b in sharp]
+    corner_coords = [mesh.vertices[i] for i in corner_idx]
+    return {
+        "edge_indices": sharp,
+        "corner_indices": corner_idx,
+        "edge_coords": edge_coords,
+        "corner_coords": corner_coords,
+    }
 
 def create_nozzle_cylinders(positions: list[np.ndarray]) -> trimesh.Trimesh | None:
     if not positions:
@@ -208,7 +207,21 @@ if __name__ == "__main__":
     m.apply_transform(flip_z)
     print("Mesh geladen!")
 
-    nozzle_positions = []
+    echte_geo = echte_kanten_und_ecken(m, angle_deg=90.0, tol_deg=1.0)  #print für die Konsole
+    print(f"Echte Kanten: {len(echte_geo['edge_indices'])}")
+    print(f"Echte Ecken: {len(echte_geo['corner_indices'])}")
+    print("Echte Ecken (Koordinaten):")
+    for idx, p in enumerate(echte_geo["corner_coords"], start=1):
+        p_rounded = tuple(round(v, 5) for v in p)
+        print(f"  K{idx}: {p_rounded}")
+
+
+    print("Duesen (Weltkoordinaten):") # print Koordinaten der Düsen
+    for name in sorted(düsen.keys()):
+        d = düsen[name]
+        print(f"  {d.name}: {d.pos} ({d.kraft})")
+
+    nozzle_positions = []                 #Düsen-Koordinaten  aus dict werden zu Zylindern
     for d in düsen.values():
         p = np.array(d.pos, dtype=float)
         nozzle_positions.append(p)
@@ -220,13 +233,13 @@ if __name__ == "__main__":
     out_dir.mkdir(parents=True, exist_ok=True)
     base_name = pfad_teil1.stem
 
-    positionen_koordinaten = []
+    positionen_koordinaten = []      #Liste für alle 24 Positionen wird erstellt 
     for position_id, (R3, label) in enumerate(rotations, start=1):
         T = np.eye(4)        # 4x4 Einheitsmatrix
-        T[:3, :3] = R3       # oben links die 3x3 Rotation einsetzen
+        T[:3, :3] = R3       # oben links die 3x3 Rotation einsetzen   Mesh wird rotiert
 
         m_rot = m.copy()     # Kopie, Original bleibt unverändert
-        m_rot.apply_transform(T)
+        m_rot.apply_transform(T) 
 
         # Ecke "rechts-hinten-unten" (E5) der aktuellen Position auf den Ursprung verschieben
         bounds = m_rot.bounds
@@ -237,12 +250,24 @@ if __name__ == "__main__":
         T_shift[:3, 3] = -e5
         m_rot.apply_transform(T_shift)
 
-        coords = ecken_und_kanten_aus_bounds(m_rot.bounds)
-        positionen_koordinaten.append(
-            {"position_id": position_id, "label": label, **coords}
-        )
 
-        if nozzle_markers is not None:
+
+
+        echte = echte_kanten_und_ecken(m_rot, angle_deg=90.0, tol_deg=1.0) # Berechnet echten 90° Kanten Ecken für die aktuelle Positione und speichert sie
+        positionen_koordinaten.append(
+            {
+                "position_id": position_id,
+                "label": label,
+                "ecken": echte["corner_coords"],
+                "kanten": echte["edge_indices"],
+                "kanten_coords": echte["edge_coords"],
+            }
+        )
+         
+
+
+
+        if nozzle_markers is not None:  #Exportiert alle Positionen
             m_export = trimesh.util.concatenate([m_rot, nozzle_markers])
         else:
             m_export = m_rot
@@ -251,19 +276,12 @@ if __name__ == "__main__":
         m_export.export(out_path)
         print("Exportiert:", out_path)
 
-    if positionen_koordinaten:
-        pos1 = positionen_koordinaten[0]
-        print(f"Pos{pos1['position_id']:02d} ({pos1['label']}) Ecken:")
-        for idx, e in enumerate(pos1["ecken"], start=1):
-            print(f"  E{idx}: {e}")
-        print("Duesen (Weltkoordinaten):")
-        for name in sorted(düsen.keys()):
-            d = düsen[name]
-            print(f"  {d.name}: {d.pos} ({d.kraft})")
 
+        
     # Anzeige entfernt; Export der Dateien reicht.
 
 e1 = positionen_koordinaten[0]["ecken"][0][0] 
+print(e1)
 #positionen_koordinaten[0] = Pos1
 #["ecken"][0] = Ecke E1
 #["ecken"][0][0] = Ecke E1 x-Wert
