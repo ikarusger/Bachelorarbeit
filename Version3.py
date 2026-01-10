@@ -124,7 +124,7 @@ def positionieren24() -> list[np.ndarray]:
     I = np.eye(3)  # Einheitsmatrix wird erstellt
 
     # 6 Grundlagen = welche Seite "unten" ist (vereinfachtes, gut verständliches Set)
-    bases = [
+    bases = [    # alle 6 Flächen liegen einmal unten
         I,             # Basis 1: wie geladen
         rot_x_90k(2),   # Basis 2: auf den Kopf (180° um x)
         rot_y_90k(1),   # Basis 3: um y kippen
@@ -137,82 +137,13 @@ def positionieren24() -> list[np.ndarray]:
     for base in bases:
         for k in range(4):
             # erst "Basis" (Kippen), dann Drehung um die Welt-z-Achse
-            positions.append(rot_z_90k(k) @ base)
+            positions.append(rot_z_90k(k) @ base)  # Matrixmultiplikation von den baess Matrixen  rot_x_90k(2) * rot_z_90(k)
 
     return positions
-
-
-
-
-
-
-
-
-
-def ordnung24rotationen() -> list[np.ndarray]:
-    """
-    Position 1..4 = z-Rotation 0/90/180/270 Grad.
-    Rest = die übrigen Rotationen.
-    """
-    all_rots = alle24rotationen()
-    first4 = [rot_z_90k(k) for k in range(4)]
-
-    ordered = []
-    # erst die 4 gewünschten
-    ordered.extend(first4)
-
-    # dann den Rest, der nicht schon drin ist
-    for R in all_rots:
-        if not any(np.allclose(R, F) for F in first4):
-            ordered.append(R)
-
-    if len(ordered) != 24:
-        raise RuntimeError("Positionsliste hat nicht 24 Einträge.")
-    return ordered
-
-
-def place_right_rear_bottom_at_origin(mesh: trimesh.Trimesh) -> None:
-    """
-    Setzt die Ecke 'rechts-hinten-unten' in den Ursprung.
-    Achsen: x vorne, y links, z oben -> rechts=-y, hinten=-x, unten=-z
-    => Ecke = (min x, min y, min z)
-    """
-    mn, mx = mesh.bounds
-    corner = np.array([mn[0], mn[1], mn[2]], dtype=float)
-
-    T = np.eye(4)
-    T[:3, 3] = -corner
-    mesh.apply_transform(T)
-
-
-def apply_position(mesh: trimesh.Trimesh, position_id: int, rotations: list[np.ndarray]) -> trimesh.Trimesh:
-    """
-    1) Mesh in Position position_id rotieren
-    2) die dann aktuelle 'rechts-hinten-unten'-Ecke in den Ursprung schieben
-    """
-    if not (1 <= position_id <= 24):
-        raise ValueError("position_id muss 1..24 sein")
-
-    m = mesh.copy()
-
-    R3 = rotations[position_id - 1]
-    R = np.eye(4)
-    R[:3, :3] = R3
-    m.apply_transform(R)
-
-    # Jetzt "neue" rechts-hinten-unten Ecke bestimmen und in Ursprung setzen
-    place_right_rear_bottom_at_origin(m)
-
-    return m
-
-
-
-
 
 if __name__ == "__main__":
     # >>> HIER: Pfad zu deiner STL-Datei eintragen (Dateiname muss exakt stimmen!)
     pfad_teil1 = Path(r"C:\Users\micha\Desktop\Bachelorarbeit\Programmierung\Cad Modelle\Test-Bauteil1.stl")
-
     print("STL-Pfad:", pfad_teil1)
     print("Existiert die Datei?", pfad_teil1.exists())
 
@@ -225,8 +156,27 @@ if __name__ == "__main__":
     print("Vertices:", len(m.vertices))
     print("Faces:", len(m.faces))
     print("Bounds (min/max):", m.bounds)
+    
+
+    rotations = positionieren24()   # Liste mit 24 Matrizen (3x3)
+
+    position_id = 2                  # 1..24
+    R3 = rotations[position_id - 1]  # 3x3 Matrix der gewünschten Position
+
+    T = np.eye(4)        # 4x4 Einheitsmatrix
+    T[:3, :3] = R3       # oben links die 3x3 Rotation einsetzen
+
+    m_rot = m.copy()     # Kopie, Original bleibt unverändert
+    m_rot.apply_transform(T)
+
+    print("Bounds nachher:", m_rot.bounds)
+
+ 
 
     # Visualisieren
     scene = trimesh.Scene()
     scene.add_geometry(m)
     scene.show(smooth=False)
+
+    
+    
