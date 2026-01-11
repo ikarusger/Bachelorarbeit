@@ -178,43 +178,31 @@ def echte_kanten_und_ecken(
 
 ##neu
 
-def point_in_triangle_2d(     #Funktion, die Prüft ob ein PUnkt in einem 2D-Dreieck liegt.
-    p: tuple[float, float],   #Zu prüfender Punkt
-    tri: tuple[tuple[float, float], tuple[float, float], tuple[float, float]],  #Eckpunkte des Dreiecks
-    eps: float = 1e-6, #Rundungsfehler
-) -> bool:                    #Gibt true oder false zurück
-    def sign(p1, p2, p3): #p1 zu prüfender Punkt
-        return (p1[0] - p3[0]) * (p2[1] - p3[1]) - (p2[0] - p3[0]) * (p1[1] - p3[1])  #Sagt auf welcher Seite der Punkt p1 relativ zu den Katen liegt
-                                                                                      # Ergebnis > 0 Punkt liegt auf einer Seite
-                                                                                      # Ergebnis < 0 Punkt liegt auf der anderen Seite
-                                                                                      # Ergebnis = 0 Punkt liegt auf beiden Seiten
-    d1 = sign(p, tri[0], tri[1])                      
-    d2 = sign(p, tri[1], tri[2])
-    d3 = sign(p, tri[2], tri[0])        #Befindet sich der Punkt immer auf der gleichen Seite der Kanten. Wenn ja, ist der Punkt im Dreieck
+def point_in_triangle_2d(
+    p: tuple[float, float],
+    tri: tuple[tuple[float, float], tuple[float, float], tuple[float, float]],
+    eps: float = 1e-6,
+) -> bool:
+    def sign(p1, p2, p3):
+        return (p1[0] - p3[0]) * (p2[1] - p3[1]) - (p2[0] - p3[0]) * (p1[1] - p3[1])
 
-    has_neg = (d1 < -eps) or (d2 < -eps) or (d3 < -eps)  # Prüft, ob Vorzeichen gemischt sind    Wird negativ, wenn mindestens ein Wert negativ ist
-    has_pos = (d1 > eps) or (d2 > eps) or (d3 > eps) #Wird positiv, wenn mindestens ein Wert positiv ist
-    return not (has_neg and has_pos) # Entscheidung, wenn positive und negative Werte vorkommen dann liegt der Punkt außerhalb, weil er auf verschiedenen Seiten der Dreieckskanten liegt
-                                     # Wenn nur negative oder nur positive Werte vorkommen, dann liegt der PUnkt innerhalb 
+    d1 = sign(p, tri[0], tri[1])
+    d2 = sign(p, tri[1], tri[2])
+    d3 = sign(p, tri[2], tri[0])
+
+    has_neg = (d1 < -eps) or (d2 < -eps) or (d3 < -eps)
+    has_pos = (d1 > eps) or (d2 > eps) or (d3 > eps)
+    return not (has_neg and has_pos)
 ##neu
 
 
-def kipp_duse(kipp_in: str, schwerpunkt: Vec3, transform: np.ndarray | None = None) -> str | None:    #Kippmöglichkeiten    ####Macht str hier sinn? besser float?
-    duesen_pos = []
-    for d in duesen.values():   #Positionsabhängigkeit des Schwerpunkts 
-        p_h = np.array([d.pos[0], d.pos[1], d.pos[2], 1.0], dtype=float)
-        if transform is not None:
-            p_h = transform @ p_h
-        p = p_h[:3]
-        duesen_pos.append((d, p))
-
-
+def kipp_duse(kipp_in: str) -> str | None:    #Kippmöglichkeiten    ####Macht str hier sinn? besser float?
     if kipp_in == "o_x_p":
-        funk_duesen = []                    # Liste mit Düsen die zum Kippen verwendet werden können d: das Duse-Objekt  dx: Abstand in x zum schwerpunkt   dz: Abstand in z um schwerpunkt
-        for d, p in duesen_pos:
-            if d.kraft == "o" and p[1] > schwerpunkt[1]: 
-                dx = abs(p[0] - schwerpunkt[0])     #Abstand zwischen Düse und schwerpunkt        abs() gibt den Betrag aus
-                dy = abs(p[1] - schwerpunkt[1])     # 0 = x, 1 = y, 2 = z
+        funk_duesen = []                    # Liste mit Düsen die zum Kippen verwendet werden können d: das Duse-Objekt  dx: Abstand in x zum Schwerpunkt   dz: Abstand in z um Schwerpunkt
+        for d in duesen.values():
+            if d.kraft == "o" and d.pos[1] > Schwerpunkt[1]: 
+                dx = abs(d.pos[0] - Schwerpunkt[0])     #Abstand zwischen Düse und Schwerpunkt        abs() gibt den Betrag aus
+                dy = abs(d.pos[1] - Schwerpunkt[1])     # 0 = x, 1 = y, 2 = z
                 dz = None
                 funk_duesen.append((d, dx,dy, dz))
         neue_liste = []
@@ -225,11 +213,11 @@ def kipp_duse(kipp_in: str, schwerpunkt: Vec3, transform: np.ndarray | None = No
         return funk_duesen
     
     if kipp_in == "o_x_n":                              
-        funk_duesen = []                    # Liste mit Düsen die zum Kippen verwendet werden können d: das Duse-Objekt  dx: Abstand in x zum schwerpunkt   dz: Abstand in z um schwerpunkt
-        for d, p in duesen_pos:
-            if d.kraft == "o" and p[1] < schwerpunkt[1]:
-                dx = abs(p[0] - schwerpunkt[0])     #Abstand zwischen Düse und schwerpunkt        abs() gibt den Betrag aus
-                dy = abs(p[1] - schwerpunkt[1])     # 0 = x, 1 = y, 2 = z
+        funk_duesen = []                    # Liste mit Düsen die zum Kippen verwendet werden können d: das Duse-Objekt  dx: Abstand in x zum Schwerpunkt   dz: Abstand in z um Schwerpunkt
+        for d in duesen.values():
+            if d.kraft == "o" and d.pos[1] < Schwerpunkt[1]:
+                dx = abs(d.pos[0] - Schwerpunkt[0])     #Abstand zwischen Düse und Schwerpunkt        abs() gibt den Betrag aus
+                dy = abs(d.pos[1] - Schwerpunkt[1])     # 0 = x, 1 = y, 2 = z
                 dz = None
                 funk_duesen.append((d, dx,dy, dz))
         neue_liste = []
@@ -240,11 +228,11 @@ def kipp_duse(kipp_in: str, schwerpunkt: Vec3, transform: np.ndarray | None = No
         return funk_duesen
     
     if kipp_in == "o_y_p":
-        funk_duesen = []                    # Liste mit Düsen die zum Kippen verwendet werden können d: das Duse-Objekt  dx: Abstand in x zum schwerpunkt   dz: Abstand in z um schwerpunkt
-        for d, p in duesen_pos:
-            if d.kraft == "o" and p[0] < schwerpunkt[0]: 
-                dx = abs(p[0] - schwerpunkt[0])     #Abstand zwischen Düse und schwerpunkt        abs() gibt den Betrag aus
-                dy = abs(p[1] - schwerpunkt[1])     # 0 = x, 1 = y, 2 = z
+        funk_duesen = []                    # Liste mit Düsen die zum Kippen verwendet werden können d: das Duse-Objekt  dx: Abstand in x zum Schwerpunkt   dz: Abstand in z um Schwerpunkt
+        for d in duesen.values():
+            if d.kraft == "o" and d.pos[0] < Schwerpunkt[0]: 
+                dx = abs(d.pos[0] - Schwerpunkt[0])     #Abstand zwischen Düse und Schwerpunkt        abs() gibt den Betrag aus
+                dy = abs(d.pos[1] - Schwerpunkt[1])     # 0 = x, 1 = y, 2 = z
                 dz = None
                 funk_duesen.append((d, dx,dy, dz))
         neue_liste = []
@@ -254,15 +242,13 @@ def kipp_duse(kipp_in: str, schwerpunkt: Vec3, transform: np.ndarray | None = No
         funk_duesen = neue_liste  # Überschreibt alte Liste
         return funk_duesen
     if kipp_in == "o_y_n":
-        funk_duesen = []                    # Liste mit Düsen die zum Kippen verwendet werden können d: das Duse-Objekt  dx: Abstand in x zum schwerpunkt   dz: Abstand in z um schwerpunkt
-        for d, p in duesen_pos:
-            if d.kraft == "o" and p[0] > schwerpunkt[0]: 
-                dx = abs(p[0] - schwerpunkt[0])     #Abstand zwischen Düse und schwerpunkt        abs() gibt den Betrag aus
-                dy = abs(p[1] - schwerpunkt[1])     # 0 = x, 1 = y, 2 = z
+        funk_duesen = []                    # Liste mit Düsen die zum Kippen verwendet werden können d: das Duse-Objekt  dx: Abstand in x zum Schwerpunkt   dz: Abstand in z um Schwerpunkt
+        for d in duesen.values():
+            if d.kraft == "o" and d.pos[0] > Schwerpunkt[0]: 
+                dx = abs(d.pos[0] - Schwerpunkt[0])     #Abstand zwischen Düse und Schwerpunkt        abs() gibt den Betrag aus
+                dy = abs(d.pos[1] - Schwerpunkt[1])     # 0 = x, 1 = y, 2 = z
                 dz = None
                 funk_duesen.append((d, dx,dy, dz))
-                print(d.name, "p=", p, "dx=", dx, "dy=", dy, "x>cm?", p[0] > schwerpunkt[0], "dx>dy?", dx > dy)
-
         neue_liste = []
         for d, dx,dy, dz in funk_duesen:   
             if dx > dy:
@@ -270,11 +256,11 @@ def kipp_duse(kipp_in: str, schwerpunkt: Vec3, transform: np.ndarray | None = No
         funk_duesen = neue_liste  # Überschreibt alte Liste
         return funk_duesen
     if kipp_in == "u_x_p":
-        funk_duesen = []                    # Liste mit Düsen die zum Kippen verwendet werden können d: das Duse-Objekt  dx: Abstand in x zum schwerpunkt   dz: Abstand in z um schwerpunkt
-        for d, p in duesen_pos:
-            if d.kraft == "u" and p[2] < schwerpunkt[2]: 
-                dx = abs(p[0] - schwerpunkt[0])     #Abstand zwischen Düse und schwerpunkt        abs() gibt den Betrag aus
-                dz = abs(p[2] - schwerpunkt[2])   # 0 = x, 1 = y, 2 = z
+        funk_duesen = []                    # Liste mit Düsen die zum Kippen verwendet werden können d: das Duse-Objekt  dx: Abstand in x zum Schwerpunkt   dz: Abstand in z um Schwerpunkt
+        for d in duesen.values():
+            if d.kraft == "u" and d.pos[2] < Schwerpunkt[2]: 
+                dx = abs(d.pos[0] - Schwerpunkt[0])     #Abstand zwischen Düse und Schwerpunkt        abs() gibt den Betrag aus
+                dz = abs(d.pos[2] - Schwerpunkt[2])   # 0 = x, 1 = y, 2 = z
                 dy= None
                 funk_duesen.append((d, dx,dy, dz))
         neue_liste = []
@@ -285,11 +271,11 @@ def kipp_duse(kipp_in: str, schwerpunkt: Vec3, transform: np.ndarray | None = No
         return funk_duesen
     
     if kipp_in == "u_x_n":
-        funk_duesen = []                    # Liste mit Düsen die zum Kippen verwendet werden können d: das Duse-Objekt  dx: Abstand in x zum schwerpunkt   dz: Abstand in z um schwerpunkt
-        for d, p in duesen_pos:
-            if d.kraft == "u" and p[2] > schwerpunkt[2]: # Nur Düsen mit u und der z Wert der Düsen muss größer sein als der z Wert des schwerpunkts
-                dx = abs(p[0] - schwerpunkt[0])     #Abstand zwischen Düse und schwerpunkt        abs() gibt den Betrag aus
-                dz = abs(p[2] - schwerpunkt[2])   # 0 = x, 1 = y, 2 = z
+        funk_duesen = []                    # Liste mit Düsen die zum Kippen verwendet werden können d: das Duse-Objekt  dx: Abstand in x zum Schwerpunkt   dz: Abstand in z um Schwerpunkt
+        for d in duesen.values():
+            if d.kraft == "u" and d.pos[2] > Schwerpunkt[2]: # Nur Düsen mit u und der z Wert der Düsen muss größer sein als der z Wert des Schwerpunkts
+                dx = abs(d.pos[0] - Schwerpunkt[0])     #Abstand zwischen Düse und Schwerpunkt        abs() gibt den Betrag aus
+                dz = abs(d.pos[2] - Schwerpunkt[2])   # 0 = x, 1 = y, 2 = z
                 dy = None
                 funk_duesen.append((d, dx,dy, dz))
         neue_liste = []
@@ -300,11 +286,11 @@ def kipp_duse(kipp_in: str, schwerpunkt: Vec3, transform: np.ndarray | None = No
         return funk_duesen
     
     if kipp_in == "u_z_p":
-        funk_duesen = []                    # Liste mit Düsen die zum Kippen verwendet werden können d: das Duse-Objekt  dx: Abstand in x zum schwerpunkt   dz: Abstand in z um schwerpunkt
-        for d, p in duesen_pos:
-            if d.kraft == "u" and p[0] > schwerpunkt[0]: 
-                dx = abs(p[0] - schwerpunkt[0])     #Abstand zwischen Düse und schwerpunkt        abs() gibt den Betrag aus
-                dz = abs(p[2] - schwerpunkt[2])   # 0 = x, 1 = y, 2 = z
+        funk_duesen = []                    # Liste mit Düsen die zum Kippen verwendet werden können d: das Duse-Objekt  dx: Abstand in x zum Schwerpunkt   dz: Abstand in z um Schwerpunkt
+        for d in duesen.values():
+            if d.kraft == "u" and d.pos[0] > Schwerpunkt[0]: 
+                dx = abs(d.pos[0] - Schwerpunkt[0])     #Abstand zwischen Düse und Schwerpunkt        abs() gibt den Betrag aus
+                dz = abs(d.pos[2] - Schwerpunkt[2])   # 0 = x, 1 = y, 2 = z
                 dy = None
                 funk_duesen.append((d, dx,dy, dz))
         neue_liste = []
@@ -315,11 +301,11 @@ def kipp_duse(kipp_in: str, schwerpunkt: Vec3, transform: np.ndarray | None = No
         return funk_duesen
     
     if kipp_in == "u_z_n":
-        funk_duesen = []                    # Liste mit Düsen die zum Kippen verwendet werden können d: das Duse-Objekt  dx: Abstand in x zum schwerpunkt   dz: Abstand in z um schwerpunkt
-        for d, p in duesen_pos:
-            if d.kraft == "u" and p[0] < schwerpunkt[0]: 
-                dx = abs(p[0] - schwerpunkt[0])     #Abstand zwischen Düse und schwerpunkt        abs() gibt den Betrag aus
-                dz = abs(p[2] - schwerpunkt[2])   # 0 = x, 1 = y, 2 = z
+        funk_duesen = []                    # Liste mit Düsen die zum Kippen verwendet werden können d: das Duse-Objekt  dx: Abstand in x zum Schwerpunkt   dz: Abstand in z um Schwerpunkt
+        for d in duesen.values():
+            if d.kraft == "u" and d.pos[0] < Schwerpunkt[0]: 
+                dx = abs(d.pos[0] - Schwerpunkt[0])     #Abstand zwischen Düse und Schwerpunkt        abs() gibt den Betrag aus
+                dz = abs(d.pos[2] - Schwerpunkt[2])   # 0 = x, 1 = y, 2 = z
                 dy = None
                 funk_duesen.append((d, dx,dy, dz))
         neue_liste = []
@@ -332,7 +318,6 @@ def kipp_duse(kipp_in: str, schwerpunkt: Vec3, transform: np.ndarray | None = No
     
 ### Aktuell werden noch Düsen außerhalb des Teils zurückgegeben 
 ### x und y Werte der Düse müssen genau so auch im Objekt vorkommen  für oben 
-## Schwerpunkt Transformation funktioniert nicht
 
 def create_nozzle_cylinders(positions: list[np.ndarray]) -> trimesh.Trimesh | None:
     if not positions:
@@ -368,6 +353,7 @@ if __name__ == "__main__":
 
 
     Schwerpunkt = tuple(round(v, 5) for v in m.center_mass) # Schwerpunkt berechnen
+    print(f"Schwerpunkt (center_mass): {Schwerpunkt}")
     if not m.is_watertight:
         print("Hinweis: Mesh ist nicht wasserdicht, Schwerpunkt kann ungenau sein.")
 
@@ -413,43 +399,31 @@ if __name__ == "__main__":
         T_shift = np.eye(4)
         T_shift[:3, 3] = -e5
         m_rot.apply_transform(T_shift)
-        T_total = T_shift @ T   ##neu kombiniert die T Rotation und T_shift Verschiebe Matrix
+        T_total = T_shift @ T
 
 
-
+##neu
 
         echte = echte_kanten_und_ecken(m_rot, angle_deg=90.0, tol_deg=1.0) # Berechnet echten 90° Kanten Ecken für die aktuelle Positione und speichert sie
-        center_mass_pos = tuple(round(v, 5) for v in m_rot.center_mass)
-        vertices_xy = {(round(v[0], 5), round(v[1], 5)) for v in m_rot.vertices} #Speichert alle Vertex-Punkte(Eckpunkte des Meshs. Ein Mesh besteht aus Dreiecken und jedes Dreieck hat 3 Vertex-Punkte)
+        vertices_xy = {(round(v[0], 5), round(v[1], 5)) for v in m_rot.vertices}
         triangles_xy = [
-            ( 
-                (float(t[0][0]), float(t[0][1])),   #Speichert nur die xy Werte der Dreiecke
+            (
+                (float(t[0][0]), float(t[0][1])),
                 (float(t[1][0]), float(t[1][1])),
                 (float(t[2][0]), float(t[2][1])),
             )
-            for t in m_rot.triangles                #Ergebnis ist eine LIste von 2D-Dreiecken in der XY-Ebene
-        ]
-        triangles_xz = [
-            (
-                (float(t[0][0]), float(t[0][2])), #Speichert nur die xz Werte der Dreiecke
-                (float(t[1][0]), float(t[1][2])),
-                (float(t[2][0]), float(t[2][2])),
-            )
-            for t in m_rot.triangles               #Ergebnis ist eine Liste von 2D-Dreiecken in der XZ-Ebene
+            for t in m_rot.triangles
         ]
         positionen_koordinaten.append(
             {
-                "position_id": position_id,        #24 Positionen
-                "label": label,                    #x0_z0 Name der Position
-                "ecken": echte["corner_coords"],   #Speichert die Koordinaten der Eckpunkte
-                "kanten": echte["edge_indices"],   #Speichert die Indizies der Kanten (Vertex-Paare)
-                "kanten_coords": echte["edge_coords"], #Speicher die Koordinaten der Kanten 
-                "vertices_xy": vertices_xy,        #XY Vertex Punkte. Damit kann ich überprüfen, ob die Düsen exakt auf einem vorhandne Mesh Vertex liegt
-                "triangles_xy": triangles_xy,      #alle Dreicke als xy Projektion Damit kann ich prüfen, ob ein Düse in einer Fläche des Meshs liegt, nicht auf einem Eckpunkt
-                "triangles_xz": triangles_xz,      #xz-Projektion
-                "transform": T_total,              #um Düsenpunkte auch in dieselbe Position wie das Mesh transformieren zu können. Kombiniert Rotation und Verschiebung des Mesh. 
-                "center_mass": center_mass_pos,    #Schwerpunkt fuer diese Position
-                #Um die DüsenKoordinaten verwenden zu können, müssen dies transformiert werden 
+                "position_id": position_id,
+                "label": label,
+                "ecken": echte["corner_coords"],
+                "kanten": echte["edge_indices"],
+                "kanten_coords": echte["edge_coords"],
+                "vertices_xy": vertices_xy,
+                "triangles_xy": triangles_xy,
+                "transform": T_total,
             }
         )
          ##neu
@@ -482,55 +456,27 @@ if __name__ == "__main__":
 
         kipp_keys = ["o_x_p", "o_x_n", "o_y_p", "o_y_n", "u_x_p", "u_x_n", "u_z_p", "u_z_n"] #Abfrage wie gekippt werden soll
         kipp_in = input(f"Welche kipp_duse? ({', '.join(kipp_keys)}): ").strip()
-        funk_duesen = kipp_duse(kipp_in, pos.get("center_mass"), pos.get("transform"))
-        print(f"Schwerpunkt (Position): {pos.get('center_mass')}")
-        if isinstance(funk_duesen, list): #Prüft, ob funk_duesen eine Liste ist. Brauche ich vielleicht nicht
-            print(f"kipp_duse {kipp_in} (vor Trefferpruefung):") #Gibt die Düsen aus, die nach der ersten Auswahl noch in frage kommen. Vor der Mesh auswahl.
-            for d, dx, dy, dz in funk_duesen:
+        duse = kipp_duse(kipp_in)
+        print(f"Schwerpunkt (center_mass): {Schwerpunkt}")
+        if isinstance(duse, list):
+            print(f"kipp_duse {kipp_in} (unter Schwerpunkt):")
+            for d, dx, dy, dz in duse:
                 print(f"  {d.name}: {d.pos} | dx={dx} dy={dy} dz={dz}")
-            triangles_xy = pos.get("triangles_xy", [])  # neu   Holt die XY-Dreiecke der ausgewaehlten Position
-            transform = pos.get("transform")            # Stellt die Transformermatirx bereit
-            trefferdusen_o = []                         #Liste mit Düsen die bezug zum Mesh haben 
-            trefferdusen_u = []
-            if triangles_xy:                            # Sind die Dreiecke vorhanden?
-                has_o = any(d.kraft == "o" for d, dx, dy, dz in funk_duesen) #Prueft nach o-Duesen in der Liste
-                if has_o:
-                    print("Treffer (x,y in Mesh-Flaeche):")
-                    for d, dx, dy, dz in funk_duesen:
-                        if d.kraft != "o":
-                            continue
-                        p_h = np.array([d.pos[0], d.pos[1], d.pos[2], 1.0], dtype=float) #Baut die Duese als Homogenen Vektor (x,y,z,1) 4x4  Transformationsmatrxi
-                        if transform is not None:  #3x3 Roation und Verschiebung    Transformiert die Duese in das Koordinatensystem der gewaehlten Position. Wenn nicht wuerde die Duese an einer anderen Stelle stehen.
-                            p_h = transform @ p_h
-                        p_xy = (float(p_h[0]), float(p_h[1]))  #nimmt nur die x und y Koordinate zur Pruefung 
-                        if any(point_in_triangle_2d(p_xy, tri) for tri in triangles_xy): #Prueft, ob der PUnkt in irgendeinem XY-Dreieck liegt
-                            trefferdusen_o.append((d, dx, dy, dz))
-                            #print(f"  {d.name}: x,y={p_xy}")
+            triangles_xy = pos.get("triangles_xy", [])  #neu
+            transform = pos.get("transform")
+            if triangles_xy:
+                print("Treffer (x,y in Mesh-Flaeche):")
+                for d, dx, dy, dz in duse:
+                    p_h = np.array([d.pos[0], d.pos[1], d.pos[2], 1.0], dtype=float)
+                    if transform is not None:
+                        p_h = transform @ p_h
+                    p_xy = (float(p_h[0]), float(p_h[1]))
+                    if any(point_in_triangle_2d(p_xy, tri) for tri in triangles_xy):
+                        print(f"  {d.name}: x,y={p_xy}")
             else:
-                print("Keine Mesh-Dreiecks-Daten fuer diese Position.")
-            triangles_xz = pos.get("triangles_xz", [])
-            if triangles_xz:
-                has_u = any(d.kraft == "u" for d, dx, dy, dz in funk_duesen)
-                if has_u:
-                    print("Treffer (x,z in Mesh-Flaeche):")
-                    for d, dx, dy, dz in funk_duesen:
-                        if d.kraft != "u":
-                            continue
-                        p_h = np.array([d.pos[0], d.pos[1], d.pos[2], 1.0], dtype=float)
-                        if transform is not None:
-                            p_h = transform @ p_h
-                        p_xz = (float(p_h[0]), float(p_h[2]))
-                        if any(point_in_triangle_2d(p_xz, tri) for tri in triangles_xz):
-                            trefferdusen_u.append((d, dx, dy, dz))
-                            #print(f"  {d.name}: x,z={p_xz}")
-            else:
-                print("Keine Mesh-Dreiecks-Daten fuer XZ.")
-            funk_duesen = trefferdusen_o + trefferdusen_u  #Liste mit Düsen, die im Mesh liegen wird erstellt
-            print(f"kipp_duse {kipp_in} (Treffer in Mesh-Flaeche):")
-            for d, dx, dy, dz in funk_duesen:
-                print(f"  {d.name}: {d.pos} | dx={dx} dy={dy} dz={dz}")
-        elif funk_duesen is not None:
-            print(f"kipp_duse {kipp_in}: {funk_duesen}")
+                print("Keine Mesh-Dreiecks-Daten fuer diese Position.")  #neu
+        elif duse is not None:
+            print(f"kipp_duse {kipp_in}: {duse}")
         else:
             print("Unbekannte kipp_duse-Auswahl.")
 
