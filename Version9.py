@@ -262,12 +262,15 @@ def kipp_duse(kipp_in: str, schwerpunkt: Vec3, transform: np.ndarray | None = No
                 dz = None
                 funk_duesen.append((d, dx,dy, dz))
                 print(d.name, "p=", p, "dx=", dx, "dy=", dy, "x>cm?", p[0] > schwerpunkt[0], "dx>dy?", dx > dy)
+                
 
         neue_liste = []
         for d, dx,dy, dz in funk_duesen:   
-            if dx > dy:
+            if dx < dy:                                ##Hier könnte der Fehler liegen
                 neue_liste.append((d, dx,dy, dz))  
+                
         funk_duesen = neue_liste  # Überschreibt alte Liste
+        
         return funk_duesen
     if kipp_in == "u_x_p":
         funk_duesen = []                    # Liste mit Düsen die zum Kippen verwendet werden können d: das Duse-Objekt  dx: Abstand in x zum schwerpunkt   dz: Abstand in z um schwerpunkt
@@ -409,6 +412,7 @@ if __name__ == "__main__":
         bounds = m_rot.bounds
         minx, miny, minz = bounds[0]
         maxx, maxy, maxz = bounds[1]
+        min_x = round(minx, 5)
         e5 = np.array([maxx, miny, minz], dtype=float)
         T_shift = np.eye(4)
         T_shift[:3, 3] = -e5
@@ -421,22 +425,25 @@ if __name__ == "__main__":
         echte = echte_kanten_und_ecken(m_rot, angle_deg=90.0, tol_deg=1.0) # Berechnet echten 90° Kanten Ecken für die aktuelle Positione und speichert sie
         center_mass_pos = tuple(round(v, 5) for v in m_rot.center_mass)
         vertices_xy = {(round(v[0], 5), round(v[1], 5)) for v in m_rot.vertices} #Speichert alle Vertex-Punkte(Eckpunkte des Meshs. Ein Mesh besteht aus Dreiecken und jedes Dreieck hat 3 Vertex-Punkte)
-        triangles_xy = [
-            ( 
-                (float(t[0][0]), float(t[0][1])),   #Speichert nur die xy Werte der Dreiecke
-                (float(t[1][0]), float(t[1][1])),
-                (float(t[2][0]), float(t[2][1])),
-            )
-            for t in m_rot.triangles                #Ergebnis ist eine LIste von 2D-Dreiecken in der XY-Ebene
-        ]
-        triangles_xz = [
-            (
-                (float(t[0][0]), float(t[0][2])), #Speichert nur die xz Werte der Dreiecke
-                (float(t[1][0]), float(t[1][2])),
-                (float(t[2][0]), float(t[2][2])),
-            )
-            for t in m_rot.triangles               #Ergebnis ist eine Liste von 2D-Dreiecken in der XZ-Ebene
-        ]
+        triangles_xy = []
+        triangles_xz = []
+        for t, n in zip(m_rot.triangles, m_rot.face_normals):
+            if abs(n[2]) > 0.9:  # fast parallel zur XY-Ebene
+                triangles_xy.append(
+                    (
+                        (float(t[0][0]), float(t[0][1])),   #Speichert nur die xy Werte der Dreiecke
+                        (float(t[1][0]), float(t[1][1])),
+                        (float(t[2][0]), float(t[2][1])),
+                    )
+                )
+            if abs(n[1]) > 0.9:  # fast parallel zur XZ-Ebene
+                triangles_xz.append(
+                    (
+                        (float(t[0][0]), float(t[0][2])), #Speichert nur die xz Werte der Dreiecke
+                        (float(t[1][0]), float(t[1][2])),
+                        (float(t[2][0]), float(t[2][2])),
+                    )
+                )
         positionen_koordinaten.append(
             {
                 "position_id": position_id,        #24 Positionen
@@ -449,6 +456,7 @@ if __name__ == "__main__":
                 "triangles_xz": triangles_xz,      #xz-Projektion
                 "transform": T_total,              #um Düsenpunkte auch in dieselbe Position wie das Mesh transformieren zu können. Kombiniert Rotation und Verschiebung des Mesh. 
                 "center_mass": center_mass_pos,    #Schwerpunkt fuer diese Position
+                "min_x": min_x,
                 #Um die DüsenKoordinaten verwenden zu können, müssen dies transformiert werden 
             }
         )
@@ -476,6 +484,7 @@ if __name__ == "__main__":
             pos_id = 1
         pos = positionen_koordinaten[pos_id - 1]
         print(f"Pos{pos['position_id']:02d} ({pos['label']}) Ecken:")
+        print(f"Min x (Position): {pos.get('min_x')}")
         for idx, e in enumerate(pos["ecken"], start=1):
             e_rounded = tuple(round(v, 5) for v in e)
             print(f"  E{idx}: {e_rounded}")
@@ -503,9 +512,12 @@ if __name__ == "__main__":
                         if transform is not None:  #3x3 Roation und Verschiebung    Transformiert die Duese in das Koordinatensystem der gewaehlten Position. Wenn nicht wuerde die Duese an einer anderen Stelle stehen.
                             p_h = transform @ p_h
                         p_xy = (float(p_h[0]), float(p_h[1]))  #nimmt nur die x und y Koordinate zur Pruefung 
-                        if any(point_in_triangle_2d(p_xy, tri) for tri in triangles_xy): #Prueft, ob der PUnkt in irgendeinem XY-Dreieck liegt
+                        hit_xy = any(point_in_triangle_2d(p_xy, tri) for tri in triangles_xy) #Prueft, ob der PUnkt in irgendeinem XY-Dreieck liegt
+                        print(f"DBG XY {d.name}: p_xy={p_xy} hit={hit_xy}")
+                        if hit_xy:
                             trefferdusen_o.append((d, dx, dy, dz))
-                            #print(f"  {d.name}: x,y={p_xy}")
+                        else:
+                            print(f"DBG kein XY-Treffer: {d.name} p_xy={p_xy}") #debug
             else:
                 print("Keine Mesh-Dreiecks-Daten fuer diese Position.")
             triangles_xz = pos.get("triangles_xz", [])
