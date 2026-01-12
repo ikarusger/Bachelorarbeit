@@ -4,11 +4,13 @@ from pathlib import Path
 
 import numpy as np
 import trimesh
+from itertools import permutations, product
 
 
 Vec3 = Tuple[float, float, float]  # (x, y, z)
 
 CylinderRadius = 2.0
+CylinderHeight = 4.0
 
 
 @dataclass(frozen=True)
@@ -375,11 +377,12 @@ if __name__ == "__main__":
         schwerpunkt_h = np.array([*Schwerpunkt, 1.0], dtype=float)  
         schwerpunkt_rot = (T_shift @ T @ schwerpunkt_h)[:3] #Der Schwerpunkt wird rotiert und verschoben
 
-        # Speichert Transformation und Mesh-Daten für spätere Ray-Test/Strahl 
+        # Speichert Transformation und Mesh-Daten für spätere Ray-Test/Strahl (Startpunkt unterhalb des Meshes).
         T_total = T_shift @ T
         bounds_sel = m_ver_orie.bounds
-        y_min = bounds_sel[0][1] - 1.0 #Setzt start y Wert unterhalb des Meshes für den y-Strahl
-        z_min = bounds_sel[0][2] - 1.0 #Setzt start z Wert unterhalb des meshs für den z-Strahl
+        y_min = bounds_sel[0][1] - 1.0
+        z_min = bounds_sel[0][2] - 1.0
+        triangles_sel = m_ver_orie.triangles
 
         echte =  echte_kanten_und_ecken(m_ver_orie, angle_deg=90.0, tol_deg=1.0) # transormierte echte Ecken und Kanten aus der Geometrie
         #echte_kanten_und_ecken gibt die Koordinaten der Ecken und Kanten soei die Ecken Indizese und die Kanten Indizes
@@ -396,8 +399,10 @@ if __name__ == "__main__":
                 
                 # Daten für Ray-Tests auf der Oberfläche der aktuellen Position
                 "T_total": T_total,
+                "bounds": bounds_sel,
                 "y_min": y_min,
                 "z_min": z_min,
+                "triangles": triangles_sel,
             }
         )
          
@@ -424,7 +429,14 @@ if __name__ == "__main__":
     schwerpunkt_pos = pos["schwerpunkt"]  #Transformierte Schwerpunktkoordinaten werden aus dem Dict geholt
 
 
-   
+    T_total = pos["T_total"]
+    bounds_sel = pos["bounds"]
+    y_min = pos["y_min"]
+    z_min = pos["z_min"]
+    triangles_sel = pos["triangles"]
+    m_sel = m.copy()
+    m_sel.apply_transform(T_total)
+
 
     print("Pos", pos["position_id"], "Ecken:") #Terminal Text
     for idx, e in enumerate(pos["ecken"]): #enumerate gibt idx und e aus
@@ -441,43 +453,23 @@ if __name__ == "__main__":
     #Bestimmt welche Düse zum Kippen zu gebrauchen ist
     print("Schwerpunkt transformiert:", schwerpunkt_pos)
    
-     #Holt Transformation und Strahl Startwerte und wendet die Position auf eine Mesh Kopie an
-    T_total = pos["T_total"]
-    y_min = pos["y_min"]
-    z_min = pos["z_min"]
-    m_sel = m.copy()  
-    m_sel.apply_transform(T_total)
 
 
     print(f"kipp_duse {kipp_in} (unter Schwerpunkt):")
-    finaldusen = []
     for d, dx, dy, dz in funkduse:
         print(f"  {d.name}: {d.pos} | dx={dx} dy={dy} dz={dz}")
 
-        #Strahltest, ob ein Strahl von der Düse aus kommend auf die Oberfläche des Meshs trifft
+
         if d.kraft == "u":
             origin = np.array([d.pos[0], y_min, d.pos[2]], dtype=float)  #Setzt den Startpunkt des Strahls gleich x z der Düse
             direction = np.array([0.0, 1.0, 0.0], dtype=float) #Richtung, in die der Strahl zeigt
-            locations, _, _ = m_sel.ray.intersects_location([origin], [direction]) #Berechnet alle Schnittpunkte des Strahls mit der Mesh Oberfläche
-            surface_match = len(locations) > 0   #Wenn es einen Treffer gab, wird true in surface_match abgespeichert
-            print("    xz_surface:", surface_match)
-            if surface_match:  #Wenn true dann
-                finaldusen.append({"duse": d, "dx": dx, "dy": dy, "dz": dz, "surface": True})
-
+            locations, _, _ = m_sel.ray.intersects_location([origin], [direction])
+            print("    xz_surface:", len(locations) > 0)
         elif d.kraft == "o":
             origin = np.array([d.pos[0], d.pos[1], z_min], dtype=float)
             direction = np.array([0.0, 0.0, 1.0], dtype=float)
             locations, _, _ = m_sel.ray.intersects_location([origin], [direction])
-            surface_match = len(locations) > 0
-            print("    xy_surface:", surface_match)
-            if surface_match:
-                finaldusen.append({"duse": d, "dx": dx, "dy": dy, "dz": dz, "surface": True})
-    
-    print("finaldusen (surface=True):")   #Finale Ausgabe, der passenden Düsen
-    for item in finaldusen:
-        d = item["duse"]
-        print(f"  {d.name}: {d.pos} | dx={item['dx']} dy={item['dy']} dz={item['dz']} surface={item['surface']}")
-       
+            print("    xy_surface:", len(locations) > 0)
     
        
 
