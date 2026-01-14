@@ -116,25 +116,6 @@ def rot_y_90k(k: int) -> np.ndarray:
                      [0, 1, 0],
                      [1, 0, 0]], dtype=float)
 
-def kipp_in_to_rot(kipp_in: str) -> np.ndarray | None: #Rotation um den Schwerpunkt2 Gibt die Rotation zurück
-    if kipp_in == "o_x_p":
-        return rot_x_90k(1)
-    if kipp_in == "o_x_n":
-        return rot_x_90k(3)
-    if kipp_in == "o_y_p":
-        return rot_y_90k(1)
-    if kipp_in == "o_y_n":
-        return rot_y_90k(3)
-    if kipp_in == "u_x_p":
-        return rot_x_90k(1)
-    if kipp_in == "u_x_n":
-        return rot_x_90k(3)
-    if kipp_in == "u_z_p":
-        return rot_z_90k(1)
-    if kipp_in == "u_z_n":
-        return rot_z_90k(3)
-    return None
-
 def positionieren24() -> list[tuple[np.ndarray, str]]: #Erstellt die Positioen
     """
     Liefert 24 Rotationen in einer einfachen, logischen Reihenfolge:
@@ -594,9 +575,7 @@ if __name__ == "__main__":
     pos_id = int(user_in)
     pos = positionen_koordinaten[pos_id - 1] #Holt sich die Information aus dem Dictor über die Positionen. position_id label schwerpunkt ecken, kanten, kanten_coords
     schwerpunkt_pos = pos["schwerpunkt"]  #Transformierte Schwerpunktkoordinaten werden aus dem Dict geholt
-    pos2 = positionen_koordinaten[1]
-    schwerpunkt_pos2 = pos2["schwerpunkt"]
-    print("Schwerpunkt Position 2:", schwerpunkt_pos2)
+   
 
 
    
@@ -619,10 +598,6 @@ if __name__ == "__main__":
     #Auswahl wie gekippt werden soll
     print("Welche kipp_duse? (o_x_p, o_x_n, o_y_p, o_y_n, u_x_p, u_x_n, u_z_p, u_z_n): ")
     kipp_in = input().strip()
-
-    
-
-
     funkduse = kipp_duse(kipp_in, schwerpunkt_pos) #kipp_duse wird aufgerufen der schwerpunkt wird übergeben und funk_dusen wird zurückgegeben
     #Bestimmt welche Düse zum Kippen zu gebrauchen ist
     print("Schwerpunkt transformiert:", schwerpunkt_pos)
@@ -636,25 +611,6 @@ if __name__ == "__main__":
 
     print(f"kipp_duse {kipp_in} (unter Schwerpunkt):")
 
-    #Berechnung des Schwerpunkt2 
-    rot90 = kipp_in_to_rot(kipp_in) # Holt 90° Rotation die zu kipp_in gehoert
-    rot_ma_akt_pos, _ = rotations[pos_id - 1] #Holt die Rotationsmatrix der aktuellen Position
-    z_rot = rot90 @ rot_ma_akt_pos #Berechnet die Ziel Rotation, erst aktuelle Position und dann Kippposition
-    z_pos = None #Ziel Positon
-    z_nam = None #Zielname
-    for idx, (R, label) in enumerate(rotations, start=1): #Durchläuft alle 24 Position 
-        print("z_rot",z_rot)
-        print("R",R)
-        print("idx", idx)
-        print("label",label)
-        if np.allclose(R, z_rot, atol=1e-6): #Prüft, ob eine der gespeicherten Rotationen der Ziel Rotation entspricht
-            z_pos = idx     #mit dem Index kann dann später im Dict der Schwerpunkt mit der Position(Index)angefordert werden
-            z_nam = label
-            break
-    print("Schwerpunkt2 label: ", z_nam, "Schwerpunkt2 pos:", z_pos)
-    schwerpunkt_pos2 = positionen_koordinaten[z_pos - 1]["schwerpunkt"] #Schwerpunkt wird aus dem Dict geholt
-    print("Koordinaten des Schwerpunkts2: ", positionen_koordinaten[z_pos - 1] ["schwerpunkt"])
-    
 
     #Berechnung der finalen Duesen
     finaldusen = []
@@ -747,6 +703,7 @@ if __name__ == "__main__":
 
 
     #Berechnung des Höhenunterschieds
+    schwerpunkt_pos2 = (-9.28, 42.86, 10.0)
     h = round(schwerpunkt_pos2[1] - schwerpunkt_pos[1],5) #Höhenunterschied des Schwerpunktes vor und nach dem Kippen. Funktioniert nicht für o_x_p und o_y_n
     print("Höhenunterschied:",h)
 
@@ -758,8 +715,9 @@ if __name__ == "__main__":
     F = round(F / 1000, 5)  # F in kg/ms2 (N)
     print("Kraft: ",F,("N"))
 
-       
+    pos2 = positionen_koordinaten[1]
+    schwerpunkt_pos2 = pos2["schwerpunkt"]
+    print("Schwerpunkt Position 2:", schwerpunkt_pos2)   
     
- 
-       
+  
 
