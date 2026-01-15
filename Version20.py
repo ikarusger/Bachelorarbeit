@@ -27,54 +27,39 @@ Ursprung: Vec3 = (0.0, 0.0, 0.0)
 # Zugriff z.B.: print(duesen["DuseU1"].pos[0])
 duesen: Dict[str, Duse] = {   #   x    y    z
     "DuseU1": Duse("DuseU1", (-10.0, 0.0, 10.0), "u"),
-    "DuseU2": Duse("DuseU2", (-25.0, 0.0, 10.0), "u"),
-    "DuseU3": Duse("DuseU3", (-40.0, 0.0, 10.0), "u"),
-    "DuseU4": Duse("DuseU4", (-55.0, 0.0, 10.0), "u"),
-    "DuseU5": Duse("DuseU5", (-10.0, 0.0, 25.0), "u"),
-    "DuseU6": Duse("DuseU6", (-25.0, 0.0, 25.0), "u"),
-    "DuseU7": Duse("DuseU7", (-40.0, 0.0, 25.0), "u"),
-    "DuseU8": Duse("DuseU8", (-55.0, 0.0, 25.0), "u"),
-    "DuseU9": Duse("DuseU9", (-10.0, 0.0, 40.0), "u"),
-    "DuseU10": Duse("DuseU10", (-25.0, 0.0, 40.0), "u"),
-    "DuseU11": Duse("DuseU11", (-40.0, 0.0, 40.0), "u"),
-    "DuseU12": Duse("DuseU12", (-55.0, 0.0, 40.0), "u"),
-    "DuseU13": Duse("DuseU13", (-10.0, 0.0, 55.0), "u"),
-    "DuseU14": Duse("DuseU14", (-25.0, 0.0, 55.0), "u"),
-    "DuseU15": Duse("DuseU15", (-40.0, 0.0, 55.0), "u"),
-    "DuseU16": Duse("DuseU16", (-55.0, 0.0, 55.0), "u"),
-    "DuseU17": Duse("DuseU17", (-10.0, 0.0, 70.0), "u"),
-    "DuseU18": Duse("DuseU18", (-25.0, 0.0, 70.0), "u"),
-    "DuseU19": Duse("DuseU19", (-40.0, 0.0, 70.0), "u"),
-    "DuseU20": Duse("DuseU20", (-55.0, 0.0, 70.0), "u"),
+    "DuseU2": Duse("DuseU2", (-20.0, 0.0, 10.0), "u"),
+    "DuseU3": Duse("DuseU3", (-30.0, 0.0, 10.0), "u"),
+    "DuseU4": Duse("DuseU4", (-10.0, 0.0, 20.0), "u"),
+    "DuseU5": Duse("DuseU5", (-20.0, 0.0, 20.0), "u"),
+    "DuseU6": Duse("DuseU6", (-30.0, 0.0, 20.0), "u"),
+    "DuseU7": Duse("DuseU7", (-10.0, 0.0, 30.0), "u"),
+    "DuseU8": Duse("DuseU8", (-20.0, 0.0, 30.0), "u"),
 
-
-    "DuseO1": Duse("DuseO1", (-10.0, 10.0, 0.0), "o"),  # DuseO O ist keine Null sonder ein großes o
-    "DuseO2": Duse("DuseO2", (-25.0, 10.0, 0.0), "o"),
-    "DuseO3": Duse("DuseO3", (-40.0, 10.0, 0.0), "o"),
-    "DuseO4": Duse("DuseO4", (-55.0, 10.0, 0.0), "o"),
-    "DuseO5": Duse("DuseO5", (-10.0, 25.0, 0.0), "o"),
-    "DuseO6": Duse("DuseO6", (-25.0, 25.0, 0.0), "o"),
-    "DuseO7": Duse("DuseO7", (-40.0, 25.0, 0.0), "o"),
-    "DuseO8": Duse("DuseO8", (-55.0, 25.0, 0.0), "o"),
-    "DuseO9": Duse("DuseO9", (-10.0, 40.0, 0.0), "o"),
-    "DuseO10": Duse("DuseO10", (-25.0, 40.0, 0.0), "o"),
-    "DuseO11": Duse("DuseO11", (-40.0, 40.0, 0.0), "o"),
-    "DuseO12": Duse("DuseO12", (-55.0, 40.0, 0.0), "o"),
-    "DuseO13": Duse("DuseO13", (-10.0, 55.0, 0.0), "o"),
-    "DuseO14": Duse("DuseO14", (-25.0, 55.0, 0.0), "o"),
-    "DuseO15": Duse("DuseO15", (-40.0, 55.0, 0.0), "o"),
-    "DuseO16": Duse("DuseO16", (-55.0, 55.0, 0.0), "o"),
-    "DuseO17": Duse("DuseO17", (-10.0, 70.0, 0.0), "o"),
-    "DuseO18": Duse("DuseO18", (-25.0, 70.0, 0.0), "o"),
-    "DuseO19": Duse("DuseO19", (-40.0, 70.0, 0.0), "o"),
-    "DuseO20": Duse("DuseO20", (-55.0, 70.0, 0.0), "o"),
+    "DuseO1": Duse("DuseO1", (-10.0, 10.0, 0.0), "o"),
+    "DuseO2": Duse("DuseO2", (-20.0, 10.0, 0.0), "o"),
+    "DuseO3": Duse("DuseO3", (-30.0, 10.0, 0.0), "o"),
+    "DuseO4": Duse("DuseO4", (-10.0, 20.0, 0.0), "o"),
+    "DuseO5": Duse("DuseO5", (-20.0, 20.0, 0.0), "o"),
+    "DuseO6": Duse("DuseO6", (-30.0, 20.0, 0.0), "o"),
+    "DuseO7": Duse("DuseO7", (-10.0, 30.0, 0.0), "o"),
+    "DuseO8": Duse("DuseO8", (-20.0, 30.0, 0.0), "o"),
 }
 
 
-def load_mesh(path: str) -> trimesh.Trimesh: #Lädt das Trimesh und gibt es aus
-    
-    #Laedt eine Mesh Datei STL
+def load_mesh(path: str) -> trimesh.Trimesh:
+    """
+    LÃ¤dt eine Mesh-Datei (STL/OBJ/PLY).
+    Falls trimesh eine Scene lÃ¤dt (mehrere Teile), werden sie zu einem Mesh zusammengefügt.
+    """
     obj = trimesh.load(path, force="mesh")
+
+    if isinstance(obj, trimesh.Scene):
+        obj = trimesh.util.concatenate(tuple(obj.geometry.values()))
+        print("Hinweis: Datei wurde als Scene geladen -> Meshes wurden zusammengefügt.")
+
+    if not isinstance(obj, trimesh.Trimesh):
+        raise TypeError(f"Datei konnte nicht als Mesh geladen werden: {path}")
+
     return obj
 
 
@@ -100,15 +85,15 @@ def rot_x_90k(k: int) -> np.ndarray:
     k = k % 4
     if k == 0:
         return np.eye(3)
-    if k == 1:  # 90°
+    if k == 1:  # 90Â°
         return np.array([[1, 0, 0],
                          [0, 0, -1],
                          [0, 1, 0]], dtype=float)
-    if k == 2:  # 180°
+    if k == 2:  # 180Â°
         return np.array([[1, 0, 0],
                          [0, -1, 0],
                          [0, 0, -1]], dtype=float)
-    # 270°
+    # 270Â°
     return np.array([[1, 0, 0],
                      [0, 0, 1],
                      [0, -1, 0]], dtype=float)
@@ -118,15 +103,15 @@ def rot_y_90k(k: int) -> np.ndarray:
     k = k % 4
     if k == 0:
         return np.eye(3)
-    if k == 1:  # 90°
+    if k == 1:  # 90Â°
         return np.array([[0, 0, 1],
                          [0, 1, 0],
                          [-1, 0, 0]], dtype=float)
-    if k == 2:  # 180°
+    if k == 2:  # 180Â°
         return np.array([[-1, 0, 0],
                          [0, 1, 0],
                          [0, 0, -1]], dtype=float)
-    # 270°
+    # 270Â°
     return np.array([[0, 0, -1],
                      [0, 1, 0],
                      [1, 0, 0]], dtype=float)
@@ -150,19 +135,19 @@ def kipp_in_to_rot(kipp_in: str) -> np.ndarray | None: #Rotation um den Schwerpu
         return rot_z_90k(3)
     return None
 
-def positionieren24() -> list[tuple[np.ndarray, str]]: #Erstellt die Position
-    
-    #Liefert 24 Rotationen in einer einfachen, logischen Reihenfolge:
-    # Position 1..4: nur z-Drehungen (0/90/180/270)
-    # Position 5..8: naechste "Grundlage" + wieder 0/90/180/270 um z
-    
-
+def positionieren24() -> list[tuple[np.ndarray, str]]: #Erstellt die Positioen
+    """
+    Liefert 24 Rotationen in einer einfachen, logischen Reihenfolge:
+    - Position 1..4: nur z-Drehungen (0/90/180/270)
+    - Position 5..8: nÃ¤chste "Grundlage" + wieder 0/90/180/270 um z
+    - usw.
+    """
     I = np.eye(3)  # Einheitsmatrix wird erstellt
 
-    # 6 Grundlagen = welche Seite unten ist (vereinfachtes, gut verstaendliches Set)
-    bases = [    # Liste mit Tupeln     alle 6 Flächen liegen einmal unten Ausgangsfläche, die im nächsten Schritt dann um die zAchse gedreht werden. So erhalte ich alle Positionen
+    # 6 Grundlagen = welche Seite "unten" ist (vereinfachtes, gut verstÃ¤ndliches Set)
+    bases = [    # alle 6 Flächen liegen einmal unten Ausgangsfläche, die im nächsten Schritt dann um die z-Achse gedreht werden. So erhalte ich alle Positionen
         ("x0", I),              # Basis 1: wie geladen
-        ("x180", rot_x_90k(2)), # Basis 2: auf den Kopf 180 um x
+        ("x180", rot_x_90k(2)), # Basis 2: auf den Kopf (180Â° um x)
         ("y90", rot_y_90k(1)),  # Basis 3: um y kippen
         ("y270", rot_y_90k(3)), # Basis 4: um y anders kippen
         ("x90", rot_x_90k(1)),  # Basis 5: um x kippen
@@ -172,10 +157,10 @@ def positionieren24() -> list[tuple[np.ndarray, str]]: #Erstellt die Position
     positions = []
     for base_label, base in bases:
         for k in range(4):
-            # erst  Basis Kippen, dann Drehung um die Welt z Achse
-            z_deg = k * 90 #Für das label
-            label = f"{base_label}_z{z_deg}" #Fürd das label
-            positions.append((rot_z_90k(k) @ base, label)) #Eigentliches Drehen
+            # erst "Basis" (Kippen), dann Drehung um die Welt-z-Achse
+            z_deg = k * 90
+            label = f"{base_label}_z{z_deg}"
+            positions.append((rot_z_90k(k) @ base, label))
 
     return positions
 
@@ -525,14 +510,14 @@ if __name__ == "__main__":
         d = duesen[name]
         print(f"  {d.name}: {d.pos} ({d.kraft})")
 
-    nozzle_positions = []                 #Dusen-Koordinaten  aus dict werden zu Kugeln
+    nozzle_positions = []                 #Dusen-Koordinaten  aus dict werden zu Zylindern
     for d in duesen.values():
         p = np.array(d.pos, dtype=float)
         nozzle_positions.append(p)
-    nozzle_markers = create_nozzle_cylinders(nozzle_positions) #Erstellt jetzt Kugeln statt Zylinder
+    nozzle_markers = create_nozzle_cylinders(nozzle_positions)
 
 
-    rotations = positionieren24()   # Liste mit 24 Matrizen (3x3) 
+    rotations = positionieren24()   # Liste mit 24 Matrizen (3x3)
 
     positionen_koordinaten = []      #Liste für alle 24 Positionen wird erstellt 
 
@@ -542,24 +527,24 @@ if __name__ == "__main__":
 
     for position_id, (R3, label) in enumerate(rotations, start=1):  #Transformation beginnt erst wird das Mesh pro Position orientiert dann verschoben
         T = np.eye(4)        # 4x4 Einheitsmatrix
-        T[:3, :3] = R3       # 3x3 Rotationsmatrix damit kann das Mesh oder PUnkte rotiert/orientiert werden
+        T[:3, :3] = R3       # oben links die 3x3 Rotation einsetzen   Mesh wird orientiert
 
         m_ver_orie = m.copy()     # Kopie, Original bleibt unverändert
         m_ver_orie.apply_transform(T)  #mesh wird durch T orientiert
 
-        # Ecke rechts hinten unten  der aktuellen Position auf den Ursprung verschieben
-        #Verschiebt Bounding Box 
+        # Ecke "rechts-hinten-unten" (E5) der aktuellen Position auf den Ursprung verschieben
+        #Verschiebt Bounding-Box 
         bounds = m_ver_orie.bounds
-        minx, miny, minz = bounds[0] #Untere Ecke der Bounding box 
-        maxx, maxy, maxz = bounds[1] #Obere Ecke der Bounding box
-        e5 = np.array([maxx, miny, minz], dtype=float) #Baut den Punkt rechts hinten unten x = max, y = min, z = min   Diese Punkt soll verschoben werden Punkt (10,10,10)
+        minx, miny, minz = bounds[0]
+        maxx, maxy, maxz = bounds[1]
+        e5 = np.array([maxx, miny, minz], dtype=float)
         T_shift = np.eye(4)
-        T_shift[:3, 3] = -e5 #Verschiebung um minus die Koordinaten des Punktes e5 (-10,-10,-10) T_shift verschiebt auf den Ursprung (0,0,0) 
-        m_ver_orie.apply_transform(T_shift) #ganzes mesh wird durch T_shift verschoben
+        T_shift[:3, 3] = -e5
+        m_ver_orie.apply_transform(T_shift) #mesh wird durch T_shift verschoben
         #m_ver_orie ist das verschobenen und orientierte Mesh
 
         schwerpunkt_h = np.array([*Schwerpunkt, 1.0], dtype=float)  
-        schwerpunkt_rot = (T_shift @ T @ schwerpunkt_h)[:3] #Der Schwerpunkt wird durch T_shift verschoben und duch T rotiert 
+        schwerpunkt_rot = (T_shift @ T @ schwerpunkt_h)[:3] #Der Schwerpunkt wird rotiert und verschoben
 
         # Speichert Transformation und Mesh-Daten für spätere Ray-Test/Strahl 
         T_total = T_shift @ T
@@ -593,9 +578,11 @@ if __name__ == "__main__":
         out_dir = Path(r"C:\Users\micha\Desktop\Bachelorarbeit\Programmierung\Cad Modelle\Modelle1") 
         out_dir.mkdir(parents=True, exist_ok=True)
         base_name = pfad_teil1.stem
-        
-        m_export = trimesh.util.concatenate([m_ver_orie, nozzle_markers]) #Exportier das Mesh und die Kugeln
-        
+        if nozzle_markers is not None:  #Exportiert alle Positionen in stl-Dateien
+            m_export = trimesh.util.concatenate([m_ver_orie, nozzle_markers])
+        else:
+            m_export = m_ver_orie
+
         out_path = out_dir / f"{base_name}_pos{position_id:02d}_{label}.stl"
         m_export.export(out_path)
         print("Exportiert:", out_path)
@@ -786,5 +773,8 @@ if __name__ == "__main__":
        
     
  
+       
+
+
        
 
