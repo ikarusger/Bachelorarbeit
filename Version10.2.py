@@ -181,32 +181,128 @@ def positionieren24() -> list[tuple[np.ndarray, str]]: #Erstellt die Position
 
 
 # reale Kanten und Ecken werden bestimmt und Datenstruktur wird angelegt
+# OPTION B START: axis parallel edge filtering
+#Prüft ob es sich um eine echte geometrische Kante handelt, oder um eine vom Mesh erstellte Kante. Dies tritt z.B bei Löchern auf. Diese extra Kanten der Lochöffnung werden herausgerechnet, da disee nicht achsenparallel sind. Diese Lösung funktioniert nur bei Körpern, wo alle Kanten Achsenparallel verlaufen.
+def axis_richtung(vec: np.ndarray, rel_tol: float, xyz_tol: float) -> int | None: #Prüfst, ob ein Richtungsvektor nahezu achsenparallel ist, indem die größte Komponente als Hauptachse ausgewählt wird  und alle anderen Komponenten nur innerhalb einer Toleranz zulässt sind Wenn das passt, gibst  die Achse (0=x, 1=y, 2=z) zurück, sonst None.
+    xyz_v = np.abs(vec) # Nimmt den Betrag von x y z des Vektors ohne Vorzeichen 
+    max_komp = float(np.max(xyz_v)) #Bestimmt die größte Kompnente also z.b x
+    #if max_comp <= abs_tol: #Wenn der Wert null ist, ist keine Richtung definierrbar 
+       # return None # Dann bricht die funktion ab, da es keinen gültigen Achsenvektor gibt 
+    axis = int(np.argmax(xyz_v)) #Die Achse mit der größten Komponente wird als Kandidat gewählt zum bsp x 
+    tol = max(xyz_tol, rel_tol * max_komp) #toleranz für Nebenachsen, da stl Dateien oft kleine Rundungsfehler haben für y z
+    for i in range(3):
+        if i != axis and xyz_v[i] > tol:#Wenn der Wert auf einer Nebenachse größer ist als die Toleranz non   Wenn y<x dann non oder wenn z<x dann non, da x die Hautpachse ist
+            return None
+    return axis
+# OPTION B END
+
+#Berechnen die echten Kanten dadurch, dass es nur Kanten als echt befindet die 90° zu einer anderen Kante stehen
 def echte_kanten_und_ecken(
-    mesh: trimesh.Trimesh, angle_deg: float = 90.0, tol_deg: float = 1.0
+    mesh: trimesh.Trimesh,
+    angle_deg: float = 90.0, #Zielwinkel
+    tol_deg: float = 1.0,
+    axis_rel_tol: float = 1e-3,
+    axis_xyz_tol: float = 1e-5,
+    min_corner_axes: int = 3, #Wie viele Achsenrichtungen an einer Ecke zusammenkommen müssen. Für eine Ecke 3
 ) -> dict:
-    fa_edges = mesh.face_adjacency_edges
-    fa_angles = mesh.face_adjacency_angles
-    if fa_edges is None or len(fa_edges) == 0:
+    fa_edges = mesh.face_adjacency_edges #Hohlt alle Kanten, die zur benachtbarten Fläche gehören
+    fa_angles = mesh.face_adjacency_angles #Fragt die Winekl zwischen diesen benachbarten Flächen ab
+    if fa_edges is None or len(fa_edges) == 0: #Falls es keine Nachbarkante gibt, bricht es ab
+        return {"edge_indices": np.empty((0, 2), dtype=int), "corner_indices": np.array([], dtype=int),
+                "edge_coords": [], "corner_coords": []} #Gibt leeres array aus
+    diff = np.abs(np.degrees(fa_angles) - angle_deg) #Berechen den Abstand des Flächenwinkel zum Zielwinkel 90
+    edge90 = fa_edges[diff <= tol_deg] #Filter nur Kanten, deren Winkel im Toleranzbereich liegen.
+    boundary = mesh.edges_boundary if hasattr(mesh, "edges_boundary") else np.empty((0, 2), dtype=int) #Fragt Randkanten des Meshs ab, da sie keine Nachbarfläche haben und damit keinen Winkelwert face_adjacency_angles
+    if boundary is not None and len(boundary) > 0: #Prüft ob es Randkanten gibt
+        edge90 = np.vstack([edge90, boundary]) #Fügt die Rankanten zu edge90 hinzu
+    if len(edge90) == 0:
+        return {"edge_indices": np.empty((0, 2), dtype=int), "corner_indices": np.array([], dtype=int),
+                "edge_coords": [], "corner_coords": []} #Wenn es keine edge90, also 90°Kante,  gibt bircht die Funktion ab.
+    edge90 = np.unique(np.sort(edge90, axis=1), axis=0)
+
+    # OPTION B START: axis-parallel edge filtering
+    #Hier wereden nur die achsenparallelen Kanten aus den 90°Kanten edge90 gefiltert
+    axis_edges = [] #Liste für alle achsenparallelen Kanten
+    axis_dirs = [] #Speicher, in welche Richtung jede gefundene Kante zeigt (0/1/2) x y z 
+    for a, b in edge90: #Schleife ür alle 90° Kanten
+        axis = axis_richtung(mesh.vertices[b] - mesh.vertices[a], axis_rel_tol, axis_xyz_tol) #Berechnet den Richtungsvektor der Kante und schut, ob er achsenparallel ist
+        if axis is not None: #Wenn die achsenparallel
+            axis_edges.append((a, b)) #Kanten hinzufügen
+            axis_dirs.append(axis) # Achsenrichtung merken
+    if len(axis_edges) == 0: #Falls keine achsenparallelen Kanten gefunden werden, wird ein leeres Ergebnis ausgegeben
         return {"edge_indices": np.empty((0, 2), dtype=int), "corner_indices": np.array([], dtype=int),
                 "edge_coords": [], "corner_coords": []}
-    diff = np.abs(np.degrees(fa_angles) - angle_deg)
-    sharp = fa_edges[diff <= tol_deg]
-    boundary = mesh.edges_boundary if hasattr(mesh, "edges_boundary") else np.empty((0, 2), dtype=int)
-    if boundary is not None and len(boundary) > 0:
-        sharp = np.vstack([sharp, boundary])
-    if len(sharp) == 0:
-        return {"edge_indices": np.empty((0, 2), dtype=int), "corner_indices": np.array([], dtype=int),
-                "edge_coords": [], "corner_coords": []}
-    sharp = np.unique(np.sort(sharp, axis=1), axis=0)
-    corner_idx = np.unique(sharp)
-    edge_coords = [(mesh.vertices[a], mesh.vertices[b]) for a, b in sharp]
-    corner_coords = [mesh.vertices[i] for i in corner_idx]
-    return {
-        "edge_indices": sharp,
+
+    axis_edges = np.array(axis_edges, dtype=int) #Wandelt die Kantenliste in ein NumPy Array um 
+    axes_by_vertex = [set() for _ in range(len(mesh.vertices))] #Für jeden Eckpunt/Vertex wird ein Set erstellt, in das die Achsenrichtungen der Kanten eingetragen werden, die an diesem Eckpunkt/Vertex hängen
+    for (a, b), axis in zip(axis_edges, axis_dirs): #Schleife über Kanten und Achsen 
+        axes_by_vertex[int(a)].add(axis) #Achse bei Start-Vertex/Eckpunkt eintragen
+        axes_by_vertex[int(b)].add(axis)#Achse bei End-Vertex/Eckpunkt eintragen
+        #Das brauche ich, da ich ja später abfrage wie viel Achsen an einem Eckpunkt/vertex zusammenkommen. Wenn es mehr als 3 sind ist es ein Eckpunkt
+    corner_idx = np.array( #Abfrage ob min_corner_axes also 3 erreicht ist. Wenn das so ist wird wird der Vertex_idx in corner _idx aufgenommen
+        [i for i, axes in enumerate(axes_by_vertex) if len(axes) >= min_corner_axes],
+        dtype=int,
+    )
+    edge_coords = [(mesh.vertices[a], mesh.vertices[b]) for a, b in axis_edges] #Hier werden die Kantenkoordianten aus den Vertex/Eckpunkt Koordinaten gebaut
+    # OPTION B END
+    corner_coords = [mesh.vertices[i] for i in corner_idx] # HIer werden die Eckkordinaten erzeugt
+    return { #Die Ergebnisse werden ins Dict zurückgegeben
+        "edge_indices": axis_edges,
         "corner_indices": corner_idx,
         "edge_coords": edge_coords,
         "corner_coords": corner_coords,
     }
+
+
+#Debug Diagnose des Meshs             Prüft, ob OptionB das Probelem mit den Löchern im Mesh gelöst hat
+def diagnose_mesh(mesh: trimesh.Trimesh, angle_deg: float = 90.0, tol_deg: float = 1.0, round_decimals: int = 5) -> None:
+    vertices = mesh.vertices
+    faces = mesh.faces
+    vertex_count = int(len(vertices))
+    face_count = int(len(faces))
+    unique_rounded = np.unique(np.round(vertices, round_decimals), axis=0)
+    duplicate_vertices = vertex_count - int(len(unique_rounded))
+
+    fa_edges = mesh.face_adjacency_edges
+    fa_angles = mesh.face_adjacency_angles
+    if fa_edges is None or len(fa_edges) == 0:
+        sharp_edge_count = 0
+    else:
+        diff = np.abs(np.degrees(fa_angles) - angle_deg)
+        sharp = fa_edges[diff <= tol_deg]
+        sharp = np.unique(np.sort(sharp, axis=1), axis=0) if len(sharp) else np.empty((0, 2), dtype=int)
+        sharp_edge_count = int(len(sharp))
+
+    boundary_edges = mesh.edges_boundary if hasattr(mesh, "edges_boundary") else np.empty((0, 2), dtype=int)
+    boundary_edge_count = int(len(boundary_edges)) if boundary_edges is not None else 0
+
+    echte = echte_kanten_und_ecken(mesh, angle_deg=angle_deg, tol_deg=tol_deg)
+    corner_count = int(len(echte["corner_indices"]))
+    edge_count = int(len(echte["edge_indices"]))
+
+    try:
+        components = mesh.split(only_watertight=False)
+        component_count = int(len(components))
+    except Exception:
+        component_count = -1
+
+    print("Mesh Diagnose:")
+    print(f"  Vertices: {vertex_count}")
+    print(f"  Faces: {face_count}")
+    print(f"  Duplicate vertices (rounded {round_decimals}): {duplicate_vertices}")
+    print(f"  Watertight: {mesh.is_watertight}")
+    print(f"  Winding consistent: {mesh.is_winding_consistent}")
+    print(f"  Euler number: {mesh.euler_number}")
+    print(f"  Sharp edges (@{angle_deg} deg +/- {tol_deg}): {sharp_edge_count}")
+    print(f"  Boundary edges: {boundary_edge_count}")
+    print(f"  Corner candidates: {corner_count}")
+    print(f"  Edge candidates: {edge_count}")
+    if component_count >= 0:
+        print(f"  Connected components: {component_count}")
+    else:
+        print("  Connected components: n/a")
+
+
 
 #Bestimmt welche Düse zum Kippen zu gebrauchen ist
 def kipp_duse(kipp_in: str, schwerpunkt: Vec3) -> list[tuple[Duse, float, float | None, float | None]] | None:    #Kippmöglichkeiten   schwerpunkt wird als transofmirten Vector ausgegeben x, y, z
@@ -489,7 +585,7 @@ def create_nozzle_cylinders(positions: list[np.ndarray]) -> trimesh.Trimesh | No
 
 if __name__ == "__main__": 
     #  Pfad zu  STL-Datei  
-    pfad_teil1 = Path(r"C:\Users\micha\Desktop\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Qf4i.stl")
+    pfad_teil1 = Path(r"C:\Users\micha\Desktop\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Ql4i.stl")
     print("STL-Pfad:", pfad_teil1)
     print("Existiert die Datei?", pfad_teil1.exists())
 
@@ -500,12 +596,11 @@ if __name__ == "__main__":
     m = load_mesh(str(pfad_teil1))
     # Scale STL numbers from inch to mm.
     #m.apply_scale(1.0 / 25.4)
-    #Flip X to match MeshLab orientation 
+    # Flip Z to match MeshLab orientation (z up)
     flip_x = np.eye(4)
     flip_x[0, 0] = -1.0
     m.apply_transform(flip_x)
     print("Mesh geladen!")
-
 
     # Debug Ausgabe der Ecken und Kanten
     echte_geo = echte_kanten_und_ecken(m, angle_deg=90.0, tol_deg=1.0)  #print für die Konsole der Ausgangskoordinaten nicht transformiert
@@ -590,7 +685,7 @@ if __name__ == "__main__":
          
 
         #Legt Ordner fest für die exportierten stl-Dateien
-        out_dir = Path(r"C:\Users\micha\Desktop\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Modelle") 
+        out_dir = Path(r"C:\Users\micha\Desktop\Bachelorarbeit\Programmierung\Cad Modelle\Modelle1") 
         out_dir.mkdir(parents=True, exist_ok=True)
         base_name = pfad_teil1.stem
         
@@ -600,6 +695,8 @@ if __name__ == "__main__":
         m_export.export(out_path)
         print("Exportiert:", out_path)
 
+
+    diagnose_mesh(m, angle_deg=90.0, tol_deg=1.0, round_decimals=5)
 
     # Auswahl der Position
      # Position abfragen und Koordinatne der Ecken ausgeben 
