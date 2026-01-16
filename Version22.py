@@ -495,7 +495,7 @@ def create_nozzle_cylinders(positions: list[np.ndarray]) -> trimesh.Trimesh | No
 
 if __name__ == "__main__": 
     #  Pfad zu  STL-Datei  
-    pfad_teil1 = Path(r"C:\Users\micha\Desktop\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Ql4i.stl")
+    pfad_teil1 = Path(r"C:\Users\micha\Desktop\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Qf4i.stl")
     print("STL-Pfad:", pfad_teil1)
     print("Existiert die Datei?", pfad_teil1.exists())
 
@@ -613,8 +613,8 @@ if __name__ == "__main__":
         writer = csv.writer(csv_file, delimiter=";") # erstellt einen writer
         writer.writerow([ #Schreibt eine Kopfzeile
             "Ausgangsposition",
-            "Kippposition",
             "kipp_in",
+            "Kippposition",
             "Duese",
             "Kippkraft",
         ])
@@ -804,8 +804,8 @@ if __name__ == "__main__":
 
                     writer.writerow([ #schreibt eine neue Zeile in die csv 
                         pos_id,
-                        z_pos,
                         kipp_in,
+                        z_pos,
                         finalduse["duse"].name,
                         F,
                     ])
