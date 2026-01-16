@@ -1,6 +1,7 @@
-from dataclasses import dataclass
+﻿from dataclasses import dataclass
 from typing import Dict, Tuple
 from pathlib import Path
+import csv
 
 import numpy as np
 import trimesh
@@ -607,190 +608,210 @@ if __name__ == "__main__":
 
     diagnose_mesh(m, angle_deg=90.0, tol_deg=1.0, round_decimals=5)
 
-    # Auswahl der Position
-     # Position abfragen und Koordinatne der Ecken ausgeben 
-    user_in = input("Welche Position fuer Ecken? (1-24): ").strip()
-    pos_id = int(user_in)
-    pos = positionen_koordinaten[pos_id - 1] #Holt sich die Information aus dem Dictor über die Positionen. position_id label schwerpunkt ecken, kanten, kanten_coords
-    schwerpunkt_pos = pos["schwerpunkt"]  #Transformierte Schwerpunktkoordinaten werden aus dem Dict geholt
-    pos2 = positionen_koordinaten[1]
-    schwerpunkt_pos2 = pos2["schwerpunkt"]
-    print("Schwerpunkt Position 2:", schwerpunkt_pos2)
+    csv_path = Path(r"C:\Users\micha\Desktop\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\kippkraft_tabelle.csv") #Pfad der cvs
+    with csv_path.open("w", newline="", encoding="utf-8") as csv_file: #Öffnet die Datei und sorgt dafür, dass sie am Ende wieder geschlossen wird   newline verhindert Leerzeichen, utf8 Zeichencode,
+        writer = csv.writer(csv_file, delimiter=";") # erstellt einen writer
+        writer.writerow([ #Schreibt eine Kopfzeile
+            "Ausgangsposition",
+            "Kippposition",
+            "kipp_in",
+            "Duese",
+            "Kippkraft",
+        ])
+
+        # Auswahl der Position
+         # Position abfragen und Koordinatne der Ecken ausgeben 
+        # Positionen automatisch durchlaufen
+        for pos_id in range(1, len(positionen_koordinaten) + 1):
 
 
-   
-    #Debug gibt transformierte Ecken und Kanten aus 
-    print("Pos", pos["position_id"], "Ecken:") #Terminal Text
-    for idx, e in enumerate(pos["ecken"]): #enumerate gibt idx und e aus
-        e_rounded = (
-            round(e[0], 5),
-            round(e[1], 5),
-            round(e[2], 5),
-        )
-        print(f"  {idx} {e_rounded}")  # Gibt den Index aus also z.b 0 und e_rounded also die gerundeten Eckenwerte aus
-    print("Pos", pos["position_id"], "Kanten:")
-    for idx, ((a, b), (ia, ib)) in enumerate(zip(pos["kanten_coords"], pos["kanten"])):#Gibt alle Transformierten Kanten + Index + den Index des Anfangs und des Endpunktes der Kante aus
-        a_rounded = tuple(np.round(a, 5))
-        b_rounded = tuple(np.round(b, 5))
-        print(f"  {idx}: {a_rounded} -> {b_rounded} | idx {ia}->{ib}")
+
+            pos = positionen_koordinaten[pos_id - 1] #Holt sich die Information aus dem Dictor über die Positionen. position_id label schwerpunkt ecken, kanten, kanten_coords
+            schwerpunkt_pos = pos["schwerpunkt"]  #Transformierte Schwerpunktkoordinaten werden aus dem Dict geholt
+            pos2 = positionen_koordinaten[1]
+            schwerpunkt_pos2 = pos2["schwerpunkt"]
+            print("Schwerpunkt Position 2:", schwerpunkt_pos2)
 
 
-    #Auswahl wie gekippt werden soll
-    print("Welche kipp_duse? (o_x_p, o_x_n, o_y_p, o_y_n, u_x_p, u_x_n, u_z_p, u_z_n): ")
-    kipp_in = input().strip()
 
-    
-
-    #Bestimmt welche Düse zum Kippen zu gebrauchen ist
-    funkduse = kipp_duse(kipp_in, schwerpunkt_pos) #kipp_duse wird aufgerufen der schwerpunkt wird übergeben und funk_dusen wird zurückgegeben
-    
-    print("Schwerpunkt transformiert:", schwerpunkt_pos)
-   
-     #Holt Transformation und Strahl Startwerte und wendet die Position auf eine Mesh Kopie an
-    T_total = pos["T_total"]
-    y_min = pos["y_min"]
-    z_min = pos["z_min"]
-    m_sel = m.copy()  
-    m_sel.apply_transform(T_total)
-
-    print(f"kipp_duse {kipp_in} ( Schwerpunkt2):")
-
-    #Berechnung des Schwerpunkt2 
-    rot90 = kipp_in_to_rot(kipp_in) # Holt 90° Rotation die zu kipp_in gehoert
-    rot_ma_akt_pos, _ = rotations[pos_id - 1] #Holt die Rotationsmatrix der aktuellen Position
-    z_rot = rot90 @ rot_ma_akt_pos #Berechnet die Ziel Rotation, erst aktuelle Position und dann Kippposition
-    z_pos = None #Ziel Positon
-    z_nam = None #Zielname
-    for idx, (R, label) in enumerate(rotations, start=1): #Durchläuft alle 24 Position 
-        print("z_rot",z_rot)
-        print("R",R)
-        print("idx", idx)
-        print("label",label)
-        if np.allclose(R, z_rot, atol=1e-6): #Prüft, ob eine der gespeicherten Rotationen der Ziel Rotation entspricht
-            z_pos = idx     #mit dem Index kann dann später im Dict der Schwerpunkt mit der Position(Index)angefordert werden
-            z_nam = label
-            break
-    print("Schwerpunkt2 label: ", z_nam, "Schwerpunkt2 pos:", z_pos)
-    schwerpunkt_pos2 = positionen_koordinaten[z_pos - 1]["schwerpunkt"] #Schwerpunkt wird aus dem Dict geholt
-    print("Koordinaten des Schwerpunkts2: ", positionen_koordinaten[z_pos - 1] ["schwerpunkt"])
-    print("Schwerpunkt1 zum Vergleich:", schwerpunkt_pos) #Debug
-
-    #Berechnung der finalen Duesen
-    finaldusen = []
-    for d, dx, dy, dz in funkduse:
-        print(f"  {d.name}: {d.pos} | dx={dx} dy={dy} dz={dz}")
-
-        #Strahltest, ob ein Strahl von der Düse aus kommend auf die Oberfläche des Meshs trifft
-        if d.kraft == "u":
-            origin = np.array([d.pos[0], y_min, d.pos[2]], dtype=float)  #Setzt den Startpunkt des Strahls gleich x z der Düse
-            direction = np.array([0.0, 1.0, 0.0], dtype=float) #Richtung, in die der Strahl zeigt
-            locations, _, _ = m_sel.ray.intersects_location([origin], [direction]) #Berechnet alle Schnittpunkte des Strahls mit der Mesh Oberfläche
-            surface_match = len(locations) > 0   #Wenn es einen Treffer gab, wird true in surface_match abgespeichert
-            print("    xz_surface:", surface_match)
-            if surface_match:  #Wenn true dann
-                print("    xz_locations:", locations) #Debug gibt alle Schnittpunkt aus
-                distances = np.linalg.norm(locations - origin, axis=1) # Berechnet den Abstand vom Strahl Startpunkt zu den Schnittpunkten
-                closest = locations[np.argmin(distances)] #Wählt den Schnittpunkt aus, der am nächsten am Strahl Startpunkt liegt
-                finaldusen.append({"duse": d, "dx": dx, "dy": dy, "dz": dz, "surface": closest.tolist()}) 
-
-        elif d.kraft == "o":
-            origin = np.array([d.pos[0], d.pos[1], z_min], dtype=float)
-            direction = np.array([0.0, 0.0, 1.0], dtype=float)
-            locations, _, _ = m_sel.ray.intersects_location([origin], [direction])
-            surface_match = len(locations) > 0
-            print("    xy_surface:", surface_match)
-            if surface_match:
-                print("    xy_locations:", locations)
-                distances = np.linalg.norm(locations - origin, axis=1)
-                closest = locations[np.argmin(distances)]
-                finaldusen.append({"duse": d, "dx": dx, "dy": dy, "dz": dz, "surface": closest.tolist()})
-    
-    print("finaldusen (surface=True):")   #Finale Ausgabe, der passenden Duesen
-    for eintrag in finaldusen:
-        d = eintrag["duse"]
-        print(f"  {d.name}: {d.pos} | dx={eintrag['dx']} dy={eintrag['dy']} dz={eintrag['dz']} surface={eintrag['surface']}")
-
-    finalduse = None
+            #Debug gibt transformierte Ecken und Kanten aus 
+            print("Pos", pos["position_id"], "Ecken:") #Terminal Text
+            for idx, e in enumerate(pos["ecken"]): #enumerate gibt idx und e aus
+                e_rounded = (
+                    round(e[0], 5),
+                    round(e[1], 5),
+                    round(e[2], 5),
+                )
+                print(f"  {idx} {e_rounded}")  # Gibt den Index aus also z.b 0 und e_rounded also die gerundeten Eckenwerte aus
+            print("Pos", pos["position_id"], "Kanten:")
+            for idx, ((a, b), (ia, ib)) in enumerate(zip(pos["kanten_coords"], pos["kanten"])):#Gibt alle Transformierten Kanten + Index + den Index des Anfangs und des Endpunktes der Kante aus
+                a_rounded = tuple(np.round(a, 5))
+                b_rounded = tuple(np.round(b, 5))
+                print(f"  {idx}: {a_rounded} -> {b_rounded} | idx {ia}->{ib}")
 
 
-    #Auswahl der Duese
-    name_in = input("Welche Duese soll bleiben? (Name): ").strip()
-    for eintrag in finaldusen:
-        if eintrag["duse"].name == name_in:
-            finalduse = eintrag
-            break
-
-    print("Finale Duese: ", finalduse)
+            #Auswahl wie gekippt werden soll
+            kipp_inputs = ["o_x_p", "o_x_n", "o_y_p", "o_y_n", "u_x_p", "u_x_n", "u_z_p", "u_z_n"]
+            for kipp_in in kipp_inputs: #Schleife, die durch alle kipp_inputs schleift
 
 
-    #Berechnung der Kippachse
-    finalkippachse = find_kippachse(pos, kipp_in)  #Kippachse wird in der Funktion bestimmt alle Koordianten werden in pos sowie die einegabe kipp_in übergeben
-    if finalkippachse is not None:
-        print("Kippkante: ",finalkippachse)
-    else:
-        print("Kippachse: keine passende Kante gefunden")
+
+                #Bestimmt welche Düse zum Kippen zu gebrauchen ist
+                funkduse = kipp_duse(kipp_in, schwerpunkt_pos) #kipp_duse wird aufgerufen der schwerpunkt wird übergeben und funk_dusen wird zurückgegeben
+
+                print("Schwerpunkt transformiert:", schwerpunkt_pos)
+
+                 #Holt Transformation und Strahl Startwerte und wendet die Position auf eine Mesh Kopie an
+                T_total = pos["T_total"]
+                y_min = pos["y_min"]
+                z_min = pos["z_min"]
+                m_sel = m.copy()  
+                m_sel.apply_transform(T_total)
+
+                print(f"kipp_duse {kipp_in} ( Schwerpunkt2):")
+
+                #Berechnung des Schwerpunkt2 
+                rot90 = kipp_in_to_rot(kipp_in) # Holt 90° Rotation die zu kipp_in gehoert
+                rot_ma_akt_pos, _ = rotations[pos_id - 1] #Holt die Rotationsmatrix der aktuellen Position
+                z_rot = rot90 @ rot_ma_akt_pos #Berechnet die Ziel Rotation, erst aktuelle Position und dann Kippposition
+                z_pos = None #Ziel Positon
+                z_nam = None #Zielname
+                for idx, (R, label) in enumerate(rotations, start=1): #Durchläuft alle 24 Position 
+                    print("z_rot",z_rot)
+                    print("R",R)
+                    print("idx", idx)
+                    print("label",label)
+                    if np.allclose(R, z_rot, atol=1e-6): #Prüft, ob eine der gespeicherten Rotationen der Ziel Rotation entspricht
+                        z_pos = idx     #mit dem Index kann dann später im Dict der Schwerpunkt mit der Position(Index)angefordert werden
+                        z_nam = label
+                        break
+                print("Schwerpunkt2 label: ", z_nam, "Schwerpunkt2 pos:", z_pos)
+                schwerpunkt_pos2 = positionen_koordinaten[z_pos - 1]["schwerpunkt"] #Schwerpunkt wird aus dem Dict geholt
+                print("Koordinaten des Schwerpunkts2: ", positionen_koordinaten[z_pos - 1] ["schwerpunkt"])
+                print("Schwerpunkt1 zum Vergleich:", schwerpunkt_pos) #Debug
+
+                #Berechnung der finalen Duesen
+                finaldusen = []
+                for d, dx, dy, dz in funkduse:
+                    print(f"  {d.name}: {d.pos} | dx={dx} dy={dy} dz={dz}")
+
+                    #Strahltest, ob ein Strahl von der Düse aus kommend auf die Oberfläche des Meshs trifft
+                    if d.kraft == "u":
+                        origin = np.array([d.pos[0], y_min, d.pos[2]], dtype=float)  #Setzt den Startpunkt des Strahls gleich x z der Düse
+                        direction = np.array([0.0, 1.0, 0.0], dtype=float) #Richtung, in die der Strahl zeigt
+                        locations, _, _ = m_sel.ray.intersects_location([origin], [direction]) #Berechnet alle Schnittpunkte des Strahls mit der Mesh Oberfläche
+                        surface_match = len(locations) > 0   #Wenn es einen Treffer gab, wird true in surface_match abgespeichert
+                        print("    xz_surface:", surface_match)
+                        if surface_match:  #Wenn true dann
+                            print("    xz_locations:", locations) #Debug gibt alle Schnittpunkt aus
+                            distances = np.linalg.norm(locations - origin, axis=1) # Berechnet den Abstand vom Strahl Startpunkt zu den Schnittpunkten
+                            closest = locations[np.argmin(distances)] #Wählt den Schnittpunkt aus, der am nächsten am Strahl Startpunkt liegt
+                            finaldusen.append({"duse": d, "dx": dx, "dy": dy, "dz": dz, "surface": closest.tolist()}) 
+
+                    elif d.kraft == "o":
+                        origin = np.array([d.pos[0], d.pos[1], z_min], dtype=float)
+                        direction = np.array([0.0, 0.0, 1.0], dtype=float)
+                        locations, _, _ = m_sel.ray.intersects_location([origin], [direction])
+                        surface_match = len(locations) > 0
+                        print("    xy_surface:", surface_match)
+                        if surface_match:
+                            print("    xy_locations:", locations)
+                            distances = np.linalg.norm(locations - origin, axis=1)
+                            closest = locations[np.argmin(distances)]
+                            finaldusen.append({"duse": d, "dx": dx, "dy": dy, "dz": dz, "surface": closest.tolist()})
+
+                print("finaldusen (surface=True):")   #Finale Ausgabe, der passenden Duesen
+                for eintrag in finaldusen:
+                    d = eintrag["duse"]
+                    print(f"  {d.name}: {d.pos} | dx={eintrag['dx']} dy={eintrag['dy']} dz={eintrag['dz']} surface={eintrag['surface']}")
+
+                if not finaldusen:
+                    print("Finale Duese: None")
+                    continue #Wenn finale duse bei einer Position und kipp_in leer ist, dann abruch und nächste kipp_in
+
+                for finalduse in finaldusen: #Schleife durch alle möglichen Düsen
+                    print("Finale Duese: ", finalduse)
 
 
- #Berechnung von OD
-    OD = None
-    ds = np.array(finalduse["surface"], dtype=float) # ds ist der D?senschnittpunkt
-    ka = np.array(finalkippachse["a"], dtype=float) # Endpunkt a der Kippkante 
-    kb = np.array(finalkippachse["b"], dtype=float) # Endpunkt b der Kippkante
-    kab = kb - ka #Berechenet Richtungsvektor der Kante 
-    if kipp_in in {"u_x_p", "u_x_n", "u_z_p", "u_z_n"}:
-        #Berechne den Abstand zwischen des D?senschnittpunkts mit dem Bauteils und der Kippachse. Funktioniert nur f?r DusenU, weil  der Abstand zwischen Duse und Kippachse in x z Richtung bleibt und nicht Dreidimensional ist.
-        
-        kante_len2 = np.dot(kab, kab) #L?nge der Kanten hoch zwei Skalarprodukt
-        prof = np.dot(ds - ka, kab) / kante_len2 #Berechne den Projektionsfaktor pro zu dem Punkt D und durch ka und kb   Ermittelt wie weit entlang der Kante der naechste Punkt zu ds ist. Ist ein Sklar und kein Punkt
-        prof = float(np.clip(prof, 0.0, 1.0)) #Begrenzt t auf [0,1], damit der Punkt auf der Kante bleibt
-        closest = ka + prof * kab #Der n?chste Punkt auf der Kante zu ds
-        OD = float(np.linalg.norm(ds - closest)) #Ermittelt den Abstand zwischen Dusenschnittpunkt ds und Kippkante. Erst wird der Abstands-Vektor berechnet, dann die Laenge des Vektors. 
-    elif kipp_in in {"o_x_p", "o_x_n"}: #OD ist der y Unterschied der finalenKippkante und der finalenDuse
-        ds = np.array(finalduse["surface"], dtype=float)
-        ka = np.array(finalkippachse["a"], dtype=float)
-        OD = abs(ds[1] - ka[1])
-
-    print("Abstand zwischen O und D: ", OD)
-
-    #Berechnung des Maassenträgheitsmoments  (Mesh muss geschlossen sein)
-    rho = 1.1e-6  # kg/mm^3
-    I_kipp = None
-    
-    kante_len1 = np.linalg.norm(kab) #Kantenlänge
-    e_k_ab = kab / kante_len1 #Normiert Richtungsvektor der Achse. nkab Einheits-Richtungsvektor
-    m_eig = m_sel.mass_properties #Zieht die Masseeigenschaften aus dem Mesh (Volumen, Traegheit, Schwerpunkt)
-    tm = m_eig["inertia"] * rho #Traeheitsmatrix um den Schwerpunkt mit der Dichte skaliert
-    mass = m_eig["volume"] * rho #Masse
-    
-    schwerpunkt_ka = schwerpunkt_pos - ka #Vektor vom Achsenpunkt ka zum Schwerpunkt
-    schwerpunkt_ka_senk = schwerpunkt_ka - np.dot(schwerpunkt_ka, e_k_ab) * e_k_ab #Entfernt den Anteil von schwerpunkt_ka der in Achsrichtung zeigt, gibt den senkrechten Anteil (Abstand zur Achse) zurück
-    schwerpunkt_ka_senk2 = np.dot(schwerpunkt_ka_senk, schwerpunkt_ka_senk)  #Quadrat des Abstands zwischen Schwerpunkt und Achse
-    Iachse = float(e_k_ab @ tm @ e_k_ab) #Trägheitsmoment um die Achse durch den Schwerpunkt
-    I_kipp = Iachse + mass * schwerpunkt_ka_senk2 #Trägheitsmoment um die Kippachse
-    print("Massentraegheitsmoment um Kippachse: ", I_kipp)
+                    #Berechnung der Kippachse
+                    finalkippachse = find_kippachse(pos, kipp_in)  #Kippachse wird in der Funktion bestimmt alle Koordianten werden in pos sowie die einegabe kipp_in übergeben
+                    if finalkippachse is not None:
+                        print("Kippkante: ",finalkippachse)
+                    else:
+                        print("Kippachse: keine passende Kante gefunden")
+                        continue
 
 
-   
+                 #Berechnung von OD
+                    OD = None
+                    ds = np.array(finalduse["surface"], dtype=float) # ds ist der D?senschnittpunkt
+                    ka = np.array(finalkippachse["a"], dtype=float) # Endpunkt a der Kippkante 
+                    kb = np.array(finalkippachse["b"], dtype=float) # Endpunkt b der Kippkante
+                    kab = kb - ka #Berechenet Richtungsvektor der Kante 
+                    if kipp_in in {"u_x_p", "u_x_n", "u_z_p", "u_z_n"}:
+                        #Berechne den Abstand zwischen des D?senschnittpunkts mit dem Bauteils und der Kippachse. Funktioniert nur f?r DusenU, weil  der Abstand zwischen Duse und Kippachse in x z Richtung bleibt und nicht Dreidimensional ist.
 
-    #Berechnung des Höhenunterschieds
-    h = abs(round(schwerpunkt_pos2[1] - schwerpunkt_pos[1],5)) #Höhenunterschied des Schwerpunktes vor und nach dem Kippen. Funktioniert nicht für o_x_p und o_y_n
-    print("Höhenunterschied:",h)
+                        kante_len2 = np.dot(kab, kab) #L?nge der Kanten hoch zwei Skalarprodukt
+                        prof = np.dot(ds - ka, kab) / kante_len2 #Berechne den Projektionsfaktor pro zu dem Punkt D und durch ka und kb   Ermittelt wie weit entlang der Kante der naechste Punkt zu ds ist. Ist ein Sklar und kein Punkt
+                        prof = float(np.clip(prof, 0.0, 1.0)) #Begrenzt t auf [0,1], damit der Punkt auf der Kante bleibt
+                        closest = ka + prof * kab #Der n?chste Punkt auf der Kante zu ds
+                        OD = float(np.linalg.norm(ds - closest)) #Ermittelt den Abstand zwischen Dusenschnittpunkt ds und Kippkante. Erst wird der Abstands-Vektor berechnet, dann die Laenge des Vektors. 
+                    elif kipp_in in {"o_x_p", "o_x_n"}: #OD ist der y Unterschied der finalenKippkante und der finalenDuse
+                        ds = np.array(finalduse["surface"], dtype=float)
+                        ka = np.array(finalkippachse["a"], dtype=float)
+                        OD = abs(ds[1] - ka[1])
 
-    #Berechnung der Kippkraft F
-    t = 0.1 #s
-    g = 9810 #mm/s2
+                    print("Abstand zwischen O und D: ", OD)
+                    if OD is None:
+                        continue
 
-    #Debug
-    print("Masse:",mass)
-    print("g:",g)
-    print("t:",t)
+                    #Berechnung des Maassenträgheitsmoments  (Mesh muss geschlossen sein)
+                    rho = 1.1e-6  # kg/mm^3
+                    I_kipp = None
 
-    F = math.sqrt((mass * g * h * 2 * math.pow(I_kipp, 2))  / (I_kipp * math.pow(t, 2) * math.pow(OD, 2))) # F in kg/mms2
-    F = round(F / 1000, 5)  # F in kg/ms2 (N)
-    print("Kraft: ",F,("N"))
+                    kante_len1 = np.linalg.norm(kab) #Kantenlänge
+                    e_k_ab = kab / kante_len1 #Normiert Richtungsvektor der Achse. nkab Einheits-Richtungsvektor
+                    m_eig = m_sel.mass_properties #Zieht die Masseeigenschaften aus dem Mesh (Volumen, Traegheit, Schwerpunkt)
+                    tm = m_eig["inertia"] * rho #Traeheitsmatrix um den Schwerpunkt mit der Dichte skaliert
+                    mass = m_eig["volume"] * rho #Masse
 
-       
-    
- 
-       
+                    schwerpunkt_ka = schwerpunkt_pos - ka #Vektor vom Achsenpunkt ka zum Schwerpunkt
+                    schwerpunkt_ka_senk = schwerpunkt_ka - np.dot(schwerpunkt_ka, e_k_ab) * e_k_ab #Entfernt den Anteil von schwerpunkt_ka der in Achsrichtung zeigt, gibt den senkrechten Anteil (Abstand zur Achse) zurück
+                    schwerpunkt_ka_senk2 = np.dot(schwerpunkt_ka_senk, schwerpunkt_ka_senk)  #Quadrat des Abstands zwischen Schwerpunkt und Achse
+                    Iachse = float(e_k_ab @ tm @ e_k_ab) #Trägheitsmoment um die Achse durch den Schwerpunkt
+                    I_kipp = Iachse + mass * schwerpunkt_ka_senk2 #Trägheitsmoment um die Kippachse
+                    print("Massentraegheitsmoment um Kippachse: ", I_kipp)
+
+
+
+
+                    #Berechnung des Höhenunterschieds
+                    h = abs(round(schwerpunkt_pos2[1] - schwerpunkt_pos[1],5)) #Höhenunterschied des Schwerpunktes vor und nach dem Kippen. Funktioniert nicht für o_x_p und o_y_n
+                    print("Höhenunterschied:",h)
+
+                    #Berechnung der Kippkraft F
+                    t = 0.1 #s
+                    g = 9810 #mm/s2
+
+                    #Debug
+                    print("Masse:",mass)
+                    print("g:",g)
+                    print("t:",t)
+
+                    F = math.sqrt((mass * g * h * 2 * math.pow(I_kipp, 2))  / (I_kipp * math.pow(t, 2) * math.pow(OD, 2))) # F in kg/mms2
+                    F = round(F / 1000, 5)  # F in kg/ms2 (N)
+                    print("Kraft: ",F,("N"))
+
+                    writer.writerow([ #schreibt eine neue Zeile in die csv 
+                        pos_id,
+                        z_pos,
+                        kipp_in,
+                        finalduse["duse"].name,
+                        F,
+                    ])
+
+    print("CSV geschrieben:", csv_path)
+
+
+
 
