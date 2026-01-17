@@ -1,4 +1,4 @@
-﻿from dataclasses import dataclass
+from dataclasses import dataclass
 from typing import Dict, Tuple
 from pathlib import Path
 import csv
@@ -512,117 +512,130 @@ if __name__ == "__main__":
             "Kippkraft",
         ])
 
-        for pfad_teil in pfade: #Schleift durch alle Pfade
-            print("STL-Pfad:", pfad_teil)
-            print("Existiert die Datei?", pfad_teil.exists())
+        for pfad_teil1 in pfade:
+            print("STL-Pfad:", pfad_teil1)
+            print("Existiert die Datei?", pfad_teil1.exists())
 
-            # Mesh laden und ein paar Infos ausgeben
-            m = load_mesh(str(pfad_teil))
-            # Scale STL numbers from inch to mm.
-            #m.apply_scale(1.0 / 25.4)
-            # Flip Z to match MeshLab orientation (z up)
-            flip_x = np.eye(4)
-            flip_x[0, 0] = -1.0
-            m.apply_transform(flip_x)
-            print("Mesh geladen!")
+    if not pfad_teil1.exists():
+        raise FileNotFoundError(f"STL-Datei nicht gefunden: {pfad_teil1}")
 
-            # Debug Ausgabe der Ecken und Kanten
-            echte_geo = echte_kanten_und_ecken(m, angle_deg=90.0, tol_deg=1.0)  #print für die Konsole der Ausgangskoordinaten nicht transformiert
-            print("Echte Ecken (Koordinaten):")
-            for idx, p in enumerate(echte_geo["corner_coords"]):
-                p_rounded = tuple(np.round(p, 5))
-                print(f"  {idx}: {p_rounded}")
-            print("Echte Kanten (Koordinaten):") #Debug Kanten
-            for idx, ((a, b), (ia, ib)) in enumerate(zip(echte_geo["edge_coords"], echte_geo["edge_indices"])):
-                a_rounded = tuple(np.round(a, 5))
-                b_rounded = tuple(np.round(b, 5))
-                print(f"  {idx}: {a_rounded} -> {b_rounded} | idx {ia}->{ib}")
+    for einzlpfade in pfade:
+        # Mesh laden und ein paar Infos ausgeben
+        m = load_mesh(str(pfad_teil1))
+        # Scale STL numbers from inch to mm.
+        #m.apply_scale(1.0 / 25.4)
+        # Flip Z to match MeshLab orientation (z up)
+        flip_x = np.eye(4)
+        flip_x[0, 0] = -1.0
+        m.apply_transform(flip_x)
+        print("Mesh geladen!")
 
-            #Debug Ausgabe der Duesen 
-            print("Duesen (Weltkoordinaten):") # print Koordinaten der Dusen
-            for name in sorted(duesen.keys()):
-                d = duesen[name]
-                print(f"  {d.name}: {d.pos} ({d.kraft})")
+        # Debug Ausgabe der Ecken und Kanten
+        echte_geo = echte_kanten_und_ecken(m, angle_deg=90.0, tol_deg=1.0)  #print für die Konsole der Ausgangskoordinaten nicht transformiert
+        print("Echte Ecken (Koordinaten):")
+        for idx, p in enumerate(echte_geo["corner_coords"]):
+            p_rounded = tuple(np.round(p, 5))
+            print(f"  {idx}: {p_rounded}")
+        print("Echte Kanten (Koordinaten):") #Debug Kanten
+        for idx, ((a, b), (ia, ib)) in enumerate(zip(echte_geo["edge_coords"], echte_geo["edge_indices"])):
+            a_rounded = tuple(np.round(a, 5))
+            b_rounded = tuple(np.round(b, 5))
+            print(f"  {idx}: {a_rounded} -> {b_rounded} | idx {ia}->{ib}")
 
-            nozzle_positions = []                 #Dusen-Koordinaten  aus dict werden zu Kugeln
-            for d in duesen.values():
-                p = np.array(d.pos, dtype=float)
-                nozzle_positions.append(p)
-            nozzle_markers = create_nozzle_cylinders(nozzle_positions) #Erstellt jetzt Kugeln statt Zylinder
+        #Debug Ausgabe der Duesen 
+        print("Duesen (Weltkoordinaten):") # print Koordinaten der Dusen
+        for name in sorted(duesen.keys()):
+            d = duesen[name]
+            print(f"  {d.name}: {d.pos} ({d.kraft})")
 
-
-            rotations = positionieren24()   # Liste mit 24 Matrizen (3x3) 
-
-            positionen_koordinaten = []      #Liste für alle 24 Positionen wird erstellt 
-
-            Schwerpunkt = tuple(round(v, 5) for v in m.center_mass) # Ausgangsschwerpunkt wird berechnet 
-
-            #Erstellt alle Meshs für alle Positionen
-
-            for position_id, (R3, label) in enumerate(rotations, start=1):  #Transformation beginnt erst wird das Mesh pro Position orientiert dann verschoben
-                T = np.eye(4)        # 4x4 Einheitsmatrix
-                T[:3, :3] = R3       # 3x3 Rotationsmatrix damit kann das Mesh oder PUnkte rotiert/orientiert werden
-
-                m_ver_orie = m.copy()     # Kopie, Original bleibt unverändert
-                m_ver_orie.apply_transform(T)  #mesh wird durch T orientiert
-
-                # Ecke rechts hinten unten  der aktuellen Position auf den Ursprung verschieben
-                #Verschiebt Bounding Box 
-                bounds = m_ver_orie.bounds
-                minx, miny, minz = bounds[0] #Untere Ecke der Bounding box 
-                maxx, maxy, maxz = bounds[1] #Obere Ecke der Bounding box
-                e5 = np.array([maxx, miny, minz], dtype=float) #Baut den Punkt rechts hinten unten x = max, y = min, z = min   Diese Punkt soll verschoben werden Punkt (10,10,10)
-                T_shift = np.eye(4)
-                T_shift[:3, 3] = -e5 #Verschiebung um minus die Koordinaten des Punktes e5 (-10,-10,-10) T_shift verschiebt auf den Ursprung (0,0,0) 
-                m_ver_orie.apply_transform(T_shift) #ganzes mesh wird durch T_shift verschoben
-                #m_ver_orie ist das verschobenen und orientierte Mesh
-
-                schwerpunkt_h = np.array([*Schwerpunkt, 1.0], dtype=float)  
-                schwerpunkt_rot = (T_shift @ T @ schwerpunkt_h)[:3] #Der Schwerpunkt wird durch T_shift verschoben und duch T rotiert 
-
-                # Speichert Transformation und Mesh-Daten für spätere Ray-Test/Strahl 
-                T_total = T_shift @ T
-                bounds_sel = m_ver_orie.bounds
-                y_min = bounds_sel[0][1] - 1.0 #Setzt start y Wert unterhalb des Meshes für den y-Strahl
-                z_min = bounds_sel[0][2] - 1.0 #Setzt start z Wert unterhalb des meshs für den z-Strahl
-
-                echte =  echte_kanten_und_ecken(m_ver_orie, angle_deg=90.0, tol_deg=1.0) # transormierte echte Ecken und Kanten aus der Geometrie
-                #echte_kanten_und_ecken gibt die Koordinaten der Ecken und Kanten soei die Ecken Indizese und die Kanten Indizes
-                #echte enthält dann die verschobenen und orientierten Koordianten der Ecken und Kanten da in m_ver_orie die verschiebung und orientierung enthalten ist
-                
-                #Definierung des Dict
-                positionen_koordinaten.append(  #Für jede Position wird ein Dictionary angelget mit den relevanten Daten
-                    {  #benötige ich, wenn ich auf z.B Eckkordinaten einer bestimmten Position zugreifen will
-                        "position_id": position_id,
-                        "label": label,
-                        "schwerpunkt": tuple(round(v, 5) for v in schwerpunkt_rot),
-                        "ecken": echte["corner_coords"],
-                        "kanten": echte["edge_indices"],
-                        "kanten_coords": echte["edge_coords"],
-                        
-                        # Daten für Ray-Tests auf der Oberfläche der aktuellen Position
-                        "T_total": T_total,
-                        "y_min": y_min,
-                        "z_min": z_min,
-                    }
-                )
-                
-
-                #Legt Ordner fest für die exportierten stl-Dateien
-                out_dir = Path(r"C:\Users\micha\Desktop\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Modelle") 
-                out_dir.mkdir(parents=True, exist_ok=True)
-                base_name = pfad_teil.stem
-                
-                m_export = trimesh.util.concatenate([m_ver_orie, nozzle_markers]) #Exportier das Mesh und die Kugeln
-                
-                out_path = out_dir / f"{base_name}_pos{position_id:02d}_{label}.stl"
-                m_export.export(out_path)
-                print("Exportiert:", out_path)
+        nozzle_positions = []                 #Dusen-Koordinaten  aus dict werden zu Kugeln
+        for d in duesen.values():
+            p = np.array(d.pos, dtype=float)
+            nozzle_positions.append(p)
+        nozzle_markers = create_nozzle_cylinders(nozzle_positions) #Erstellt jetzt Kugeln statt Zylinder
 
 
-            diagnose_mesh(m, angle_deg=90.0, tol_deg=1.0, round_decimals=5)
+        rotations = positionieren24()   # Liste mit 24 Matrizen (3x3) 
 
+        positionen_koordinaten = []      #Liste für alle 24 Positionen wird erstellt 
+
+        Schwerpunkt = tuple(round(v, 5) for v in m.center_mass) # Ausgangsschwerpunkt wird berechnet 
+
+        #Erstellt alle Meshs für alle Positionen
+
+        for position_id, (R3, label) in enumerate(rotations, start=1):  #Transformation beginnt erst wird das Mesh pro Position orientiert dann verschoben
+            T = np.eye(4)        # 4x4 Einheitsmatrix
+            T[:3, :3] = R3       # 3x3 Rotationsmatrix damit kann das Mesh oder PUnkte rotiert/orientiert werden
+
+            m_ver_orie = m.copy()     # Kopie, Original bleibt unverändert
+            m_ver_orie.apply_transform(T)  #mesh wird durch T orientiert
+
+            # Ecke rechts hinten unten  der aktuellen Position auf den Ursprung verschieben
+            #Verschiebt Bounding Box 
+            bounds = m_ver_orie.bounds
+            minx, miny, minz = bounds[0] #Untere Ecke der Bounding box 
+            maxx, maxy, maxz = bounds[1] #Obere Ecke der Bounding box
+            e5 = np.array([maxx, miny, minz], dtype=float) #Baut den Punkt rechts hinten unten x = max, y = min, z = min   Diese Punkt soll verschoben werden Punkt (10,10,10)
+            T_shift = np.eye(4)
+            T_shift[:3, 3] = -e5 #Verschiebung um minus die Koordinaten des Punktes e5 (-10,-10,-10) T_shift verschiebt auf den Ursprung (0,0,0) 
+            m_ver_orie.apply_transform(T_shift) #ganzes mesh wird durch T_shift verschoben
+            #m_ver_orie ist das verschobenen und orientierte Mesh
+
+            schwerpunkt_h = np.array([*Schwerpunkt, 1.0], dtype=float)  
+            schwerpunkt_rot = (T_shift @ T @ schwerpunkt_h)[:3] #Der Schwerpunkt wird durch T_shift verschoben und duch T rotiert 
+
+            # Speichert Transformation und Mesh-Daten für spätere Ray-Test/Strahl 
+            T_total = T_shift @ T
+            bounds_sel = m_ver_orie.bounds
+            y_min = bounds_sel[0][1] - 1.0 #Setzt start y Wert unterhalb des Meshes für den y-Strahl
+            z_min = bounds_sel[0][2] - 1.0 #Setzt start z Wert unterhalb des meshs für den z-Strahl
+
+            echte =  echte_kanten_und_ecken(m_ver_orie, angle_deg=90.0, tol_deg=1.0) # transormierte echte Ecken und Kanten aus der Geometrie
+            #echte_kanten_und_ecken gibt die Koordinaten der Ecken und Kanten soei die Ecken Indizese und die Kanten Indizes
+            #echte enthält dann die verschobenen und orientierten Koordianten der Ecken und Kanten da in m_ver_orie die verschiebung und orientierung enthalten ist
             
+            #Definierung des Dict
+            positionen_koordinaten.append(  #Für jede Position wird ein Dictionary angelget mit den relevanten Daten
+                {  #benötige ich, wenn ich auf z.B Eckkordinaten einer bestimmten Position zugreifen will
+                    "position_id": position_id,
+                    "label": label,
+                    "schwerpunkt": tuple(round(v, 5) for v in schwerpunkt_rot),
+                    "ecken": echte["corner_coords"],
+                    "kanten": echte["edge_indices"],
+                    "kanten_coords": echte["edge_coords"],
+                    
+                    # Daten für Ray-Tests auf der Oberfläche der aktuellen Position
+                    "T_total": T_total,
+                    "y_min": y_min,
+                    "z_min": z_min,
+                }
+            )
+            
+
+            #Legt Ordner fest für die exportierten stl-Dateien
+            out_dir = Path(r"C:\Users\micha\Desktop\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Modelle") 
+            out_dir.mkdir(parents=True, exist_ok=True)
+            base_name = pfad_teil1.stem
+            
+            m_export = trimesh.util.concatenate([m_ver_orie, nozzle_markers]) #Exportier das Mesh und die Kugeln
+            
+            out_path = out_dir / f"{base_name}_pos{position_id:02d}_{label}.stl"
+            m_export.export(out_path)
+            print("Exportiert:", out_path)
+
+
+        diagnose_mesh(m, angle_deg=90.0, tol_deg=1.0, round_decimals=5)
+
+        csv_path = Path(r"C:\Users\micha\Desktop\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\kippkraft_tabelle.csv") #Pfad der cvs
+        with csv_path.open("w", newline="", encoding="utf-8") as csv_file: #Öffnet die Datei und sorgt dafür, dass sie am Ende wieder geschlossen wird   newline verhindert Leerzeichen, utf8 Zeichencode,
+            writer = csv.writer(csv_file, delimiter=";") # erstellt einen writer
+            writer.writerow([ #Schreibt eine Kopfzeile
+                "Ausgangsposition",
+                "kipp_in",
+                "Kippposition",
+                "Duese",
+                "Kippkraft",
+            ])
 
             # Auswahl der Position
             # Position abfragen und Koordinatne der Ecken ausgeben 
@@ -808,7 +821,6 @@ if __name__ == "__main__":
                         print("Kraft: ",F,("N"))
 
                         writer.writerow([ #schreibt eine neue Zeile in die csv 
-                            pfad_teil.name,
                             pos_id,
                             kipp_in,
                             z_pos,

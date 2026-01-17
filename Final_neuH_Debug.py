@@ -1,4 +1,4 @@
-﻿from dataclasses import dataclass
+from dataclasses import dataclass
 from typing import Dict, Tuple
 from pathlib import Path
 import csv
@@ -337,7 +337,7 @@ def kipp_duse(kipp_in: str, schwerpunkt: Vec3) -> list[tuple[Duse, float, float 
         funk_duesen = neue_liste  # Überschreibt alte Liste
         return funk_duesen
     
-    if kipp_in == "o_y_p":
+   # if kipp_in == "o_y_p": # Benötige ich nicht mehr
         funk_duesen = []                    # Liste mit Düsen die zum Kippen verwendet werden können d: das Duse-Objekt  dx: Abstand in x zum Schwerpunkt   dz: Abstand in z um Schwerpunkt
         for d in duesen.values():
             if d.kraft == "o" and d.pos[0] < schwerpunkt[0]: 
@@ -351,7 +351,7 @@ def kipp_duse(kipp_in: str, schwerpunkt: Vec3) -> list[tuple[Duse, float, float 
                 neue_liste.append((d, dx,dy, dz))  
         funk_duesen = neue_liste  # Überschreibt alte Liste
         return funk_duesen
-    if kipp_in == "o_y_n":
+   # if kipp_in == "o_y_n": #Benötige ich nicht mehr
         funk_duesen = []                    # Liste mit Düsen die zum Kippen verwendet werden können d: das Duse-Objekt  dx: Abstand in x zum Schwerpunkt   dz: Abstand in z um Schwerpunkt
         for d in duesen.values():
             if d.kraft == "o" and d.pos[0] > schwerpunkt[0]: 
@@ -510,6 +510,9 @@ if __name__ == "__main__":
             "Kippposition",
             "Duese",
             "Kippkraft",
+            "Hoehenunterschied",
+            "y-Schwerpunkt",
+            "y-Schwerpunkt2",
         ])
 
         for pfad_teil in pfade: #Schleift durch alle Pfade
@@ -632,7 +635,7 @@ if __name__ == "__main__":
 
 
                 pos = positionen_koordinaten[pos_id - 1] #Holt sich die Information aus dem Dictor über die Positionen. position_id label schwerpunkt ecken, kanten, kanten_coords
-                schwerpunkt_pos = pos["schwerpunkt"]  #Transformierte Schwerpunktkoordinaten werden aus dem Dict geholt
+                schwerpunkt_pos = pos["schwerpunkt"]  #Transformierte Schwerpunktkoordinaten werden aus dem Dict geholt                
                 pos2 = positionen_koordinaten[1]
                 schwerpunkt_pos2 = pos2["schwerpunkt"]
                 print("Schwerpunkt Position 2:", schwerpunkt_pos2)
@@ -656,7 +659,7 @@ if __name__ == "__main__":
 
 
                 #Auswahl wie gekippt werden soll
-                kipp_inputs = ["o_x_p", "o_x_n", "o_y_p", "o_y_n", "u_x_p", "u_x_n", "u_z_p", "u_z_n"]
+                kipp_inputs = ["o_x_p", "o_x_n", "u_x_p", "u_x_n", "u_z_p", "u_z_n"]  #Um o_y_p und o_y_n muss nicht mehr gekippt werden
                 for kipp_in in kipp_inputs: #Schleife, die durch alle kipp_inputs schleift
 
 
@@ -791,7 +794,14 @@ if __name__ == "__main__":
 
 
                         #Berechnung des Höhenunterschieds
-                        h = abs(round(schwerpunkt_pos2[1] - schwerpunkt_pos[1],5)) #Höhenunterschied des Schwerpunktes vor und nach dem Kippen. Funktioniert nicht für o_x_p und o_y_n
+                        #h = abs(round(schwerpunkt_pos2[1] - schwerpunkt_pos[1],5)) #Höhenunterschied des Schwerpunktes vor und nach dem Kippen. Funktioniert nicht für o_x_p und o_y_n
+                        #Neue Berechnung des Höhenunterschieds
+
+                        
+                       
+                        schwerpunkt_kippachse_abstand = float(np.linalg.norm(schwerpunkt_ka_senk)) #schwerpunkt_ka_senk ist der senkrechte Vektor vom Schwerpunkt zur Kippachse, diesen hab ich schon berechnet. Np.linalg.norm() berechnet dann die Länge des Vektors. So habe ich die Länge vom Schwerpunkt zur Kippachse.
+                        #Der Abstand zwischen schwerpunkt und kippachse ist somit der neue y-Wert für Schwerpunkt2 und damit ist der Höhenuntschied:
+                        h=abs(round(float(schwerpunkt_kippachse_abstand) - float(schwerpunkt_pos[1]),5))
                         print("Höhenunterschied:",h)
 
                         #Berechnung der Kippkraft F
@@ -813,7 +823,10 @@ if __name__ == "__main__":
                             kipp_in,
                             z_pos,
                             finalduse["duse"].name,
-                            F,
+                            f"{F:.5f}".replace(".", ","),
+                            f"{h:.5f}".replace(".", ","),
+                            f"{schwerpunkt_pos[1]:.5f}".replace(".", ","),
+                            f"{schwerpunkt_kippachse_abstand:.5f}".replace(".", ","),
                         ])
 
     print("CSV geschrieben:", csv_path)

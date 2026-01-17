@@ -1,4 +1,4 @@
-﻿from dataclasses import dataclass
+from dataclasses import dataclass
 from typing import Dict, Tuple
 from pathlib import Path
 import csv
@@ -337,7 +337,7 @@ def kipp_duse(kipp_in: str, schwerpunkt: Vec3) -> list[tuple[Duse, float, float 
         funk_duesen = neue_liste  # Überschreibt alte Liste
         return funk_duesen
     
-    if kipp_in == "o_y_p":
+   # if kipp_in == "o_y_p": # Benötige ich nicht mehr
         funk_duesen = []                    # Liste mit Düsen die zum Kippen verwendet werden können d: das Duse-Objekt  dx: Abstand in x zum Schwerpunkt   dz: Abstand in z um Schwerpunkt
         for d in duesen.values():
             if d.kraft == "o" and d.pos[0] < schwerpunkt[0]: 
@@ -351,7 +351,7 @@ def kipp_duse(kipp_in: str, schwerpunkt: Vec3) -> list[tuple[Duse, float, float 
                 neue_liste.append((d, dx,dy, dz))  
         funk_duesen = neue_liste  # Überschreibt alte Liste
         return funk_duesen
-    if kipp_in == "o_y_n":
+   # if kipp_in == "o_y_n": #Benötige ich nicht mehr
         funk_duesen = []                    # Liste mit Düsen die zum Kippen verwendet werden können d: das Duse-Objekt  dx: Abstand in x zum Schwerpunkt   dz: Abstand in z um Schwerpunkt
         for d in duesen.values():
             if d.kraft == "o" and d.pos[0] > schwerpunkt[0]: 
@@ -656,7 +656,7 @@ if __name__ == "__main__":
 
 
                 #Auswahl wie gekippt werden soll
-                kipp_inputs = ["o_x_p", "o_x_n", "o_y_p", "o_y_n", "u_x_p", "u_x_n", "u_z_p", "u_z_n"]
+                kipp_inputs = ["o_x_p", "o_x_n", "u_x_p", "u_x_n", "u_z_p", "u_z_n"]  #Um o_y_p und o_y_n muss nicht mehr gekippt werden
                 for kipp_in in kipp_inputs: #Schleife, die durch alle kipp_inputs schleift
 
 
