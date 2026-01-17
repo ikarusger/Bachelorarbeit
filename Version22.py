@@ -495,9 +495,26 @@ def create_nozzle_cylinders(positions: list[np.ndarray]) -> trimesh.Trimesh | No
 
 if __name__ == "__main__": 
     #  Pfad zu  STL-Datei  
-    pfad_teil1 = Path(r"C:\Users\micha\Desktop\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Qf4i.stl")
-    print("STL-Pfad:", pfad_teil1)
-    print("Existiert die Datei?", pfad_teil1.exists())
+    pfade = [
+        Path(r"C:\Users\micha\Desktop\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Qf4i.stl"),
+        Path(r"C:\Users\micha\Desktop\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Ql4i.stl"),
+        Path(r"C:\Users\micha\Desktop\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Rk2i.stl"),
+    ]
+    csv_path = Path(r"C:\Users\micha\Desktop\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\kippkraft_tabelle.csv") #Pfad der cvs
+    with csv_path.open("w", newline="", encoding="utf-8") as csv_file: #Öffnet die Datei und sorgt dafür, dass sie am Ende wieder geschlossen wird
+        writer = csv.writer(csv_file, delimiter=";") # erstellt einen writer
+        writer.writerow([ #Schreibt eine Kopfzeile
+            "Datei",
+            "Ausgangsposition",
+            "kipp_in",
+            "Kippposition",
+            "Duese",
+            "Kippkraft",
+        ])
+
+        for pfad_teil1 in pfade:
+            print("STL-Pfad:", pfad_teil1)
+            print("Existiert die Datei?", pfad_teil1.exists())
 
     if not pfad_teil1.exists():
         raise FileNotFoundError(f"STL-Datei nicht gefunden: {pfad_teil1}")
