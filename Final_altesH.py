@@ -215,13 +215,13 @@ def echte_kanten_und_ecken(
     edge90 = fa_edges[diff <= tol_deg] #Filter nur Kanten, deren Winkel im Toleranzbereich liegen.
     boundary = mesh.edges_boundary if hasattr(mesh, "edges_boundary") else np.empty((0, 2), dtype=int) #Fragt Randkanten des Meshs ab, da sie keine Nachbarfläche haben und damit keinen Winkelwert face_adjacency_angles
     if boundary is not None and len(boundary) > 0: #Prüft ob es Randkanten gibt
-        edge90 = np.vstack([edge90, boundary]) #Fügt die Rankanten zu edge90 hinzu
+        edge90 = np.vstack([edge90, boundary]) #Fügt die Randkanten zu edge90 hinzu
     if len(edge90) == 0:
         return {"edge_indices": np.empty((0, 2), dtype=int), "corner_indices": np.array([], dtype=int),
                 "edge_coords": [], "corner_coords": []} #Wenn es keine edge90, also 90°Kante,  gibt bircht die Funktion ab.
     edge90 = np.unique(np.sort(edge90, axis=1), axis=0)
 
-    # OPTION B START: axis-parallel edge filtering
+    #Option B axis parallel edge filtering
     #Hier wereden nur die achsenparallelen Kanten aus den 90°Kanten edge90 gefiltert
     axis_edges = [] #Liste für alle achsenparallelen Kanten
     axis_dirs = [] #Speicher, in welche Richtung jede gefundene Kante zeigt (0/1/2) x y z 
@@ -636,9 +636,10 @@ if __name__ == "__main__":
 
                 pos = positionen_koordinaten[pos_id - 1] #Holt sich die Information aus dem Dictor über die Positionen. position_id label schwerpunkt ecken, kanten, kanten_coords
                 schwerpunkt_pos = pos["schwerpunkt"]  #Transformierte Schwerpunktkoordinaten werden aus dem Dict geholt
-                pos2 = positionen_koordinaten[1]
-                schwerpunkt_pos2 = pos2["schwerpunkt"]
-                print("Schwerpunkt Position 2:", schwerpunkt_pos2)
+                #pos2 = positionen_koordinaten[1] #Debug
+                #schwerpunkt_pos2 = pos2["schwerpunkt"]
+                print("Schwerpunkt:", schwerpunkt_pos)
+                #print("Schwerpunkt Position 2:", schwerpunkt_pos2)
 
 
 
@@ -752,17 +753,17 @@ if __name__ == "__main__":
 
                     #Berechnung von OD
                         OD = None
-                        ds = np.array(finalduse["surface"], dtype=float) # ds ist der D?senschnittpunkt
+                        ds = np.array(finalduse["surface"], dtype=float) # ds ist der Dusenschnittpunkt
                         ka = np.array(finalkippachse["a"], dtype=float) # Endpunkt a der Kippkante 
                         kb = np.array(finalkippachse["b"], dtype=float) # Endpunkt b der Kippkante
                         kab = kb - ka #Berechenet Richtungsvektor der Kante 
                         if kipp_in in {"u_x_p", "u_x_n", "u_z_p", "u_z_n"}:
-                            #Berechne den Abstand zwischen des D?senschnittpunkts mit dem Bauteils und der Kippachse. Funktioniert nur f?r DusenU, weil  der Abstand zwischen Duse und Kippachse in x z Richtung bleibt und nicht Dreidimensional ist.
+                            #Berechne den Abstand zwischen des Dusenschnittpunkts mit dem Bauteils und der Kippachse. Funktioniert nur fur DusenU, weil  der Abstand zwischen Duse und Kippachse in x z Richtung bleibt und nicht Dreidimensional ist.
 
-                            kante_len2 = np.dot(kab, kab) #L?nge der Kanten hoch zwei Skalarprodukt
+                            kante_len2 = np.dot(kab, kab) #Laenge der Kanten hoch zwei Skalarprodukt
                             prof = np.dot(ds - ka, kab) / kante_len2 #Berechne den Projektionsfaktor pro zu dem Punkt D und durch ka und kb   Ermittelt wie weit entlang der Kante der naechste Punkt zu ds ist. Ist ein Sklar und kein Punkt
                             prof = float(np.clip(prof, 0.0, 1.0)) #Begrenzt t auf [0,1], damit der Punkt auf der Kante bleibt
-                            closest = ka + prof * kab #Der n?chste Punkt auf der Kante zu ds
+                            closest = ka + prof * kab #Der naechste Punkt auf der Kante zu ds
                             OD = float(np.linalg.norm(ds - closest)) #Ermittelt den Abstand zwischen Dusenschnittpunkt ds und Kippkante. Erst wird der Abstands-Vektor berechnet, dann die Laenge des Vektors. 
                         elif kipp_in in {"o_x_p", "o_x_n"}: #OD ist der y Unterschied der finalenKippkante und der finalenDuse
                             ds = np.array(finalduse["surface"], dtype=float)

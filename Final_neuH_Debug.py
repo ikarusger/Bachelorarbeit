@@ -636,9 +636,10 @@ if __name__ == "__main__":
 
                 pos = positionen_koordinaten[pos_id - 1] #Holt sich die Information aus dem Dictor über die Positionen. position_id label schwerpunkt ecken, kanten, kanten_coords
                 schwerpunkt_pos = pos["schwerpunkt"]  #Transformierte Schwerpunktkoordinaten werden aus dem Dict geholt                
-                pos2 = positionen_koordinaten[1]
-                schwerpunkt_pos2 = pos2["schwerpunkt"]
-                print("Schwerpunkt Position 2:", schwerpunkt_pos2)
+                #pos2 = positionen_koordinaten[1] #Debug
+                #schwerpunkt_pos2 = pos2["schwerpunkt"] 
+                #print("Schwerpunkt Position 2:", schwerpunkt_pos2)
+                print("Schwerpunkt:",schwerpunkt_pos)
 
 
 
