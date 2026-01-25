@@ -509,10 +509,14 @@ if __name__ == "__main__":
             "kipp_in",
             "Kippposition",
             "Duese",
-            "Kippkraft",
+            "Impulskraft",
             "Hoehenunterschied",
             "y-Schwerpunkt",
             "y-Schwerpunkt2",
+            "Impulskraft verkippt",
+            "Hoehenunterschied verkippt",
+            "y-Schwerpunkt verkippt",
+            "y-Schwerpunkt2 verkippt"
         ])
 
         for pfad_teil in pfade: #Schleift durch alle Pfade
@@ -752,21 +756,16 @@ if __name__ == "__main__":
 
                     #Berechnung von OD
                         OD = None
-                        ds = np.array(finalduse["surface"], dtype=float) # ds ist der D?senschnittpunkt
+                        ds = np.array(finalduse["surface"], dtype=float) # ds ist der Dusenschnittpunkt
                         ka = np.array(finalkippachse["a"], dtype=float) # Endpunkt a der Kippkante 
                         kb = np.array(finalkippachse["b"], dtype=float) # Endpunkt b der Kippkante
                         kab = kb - ka #Berechenet Richtungsvektor der Kante 
-                        if kipp_in in {"u_x_p", "u_x_n", "u_z_p", "u_z_n"}:
-                            #Berechne den Abstand zwischen des D?senschnittpunkts mit dem Bauteils und der Kippachse. Funktioniert nur f?r DusenU, weil  der Abstand zwischen Duse und Kippachse in x z Richtung bleibt und nicht Dreidimensional ist.
 
-                            kante_len2 = np.dot(kab, kab) #L?nge der Kanten hoch zwei Skalarprodukt
-                            prof = np.dot(ds - ka, kab) / kante_len2 #Berechne den Projektionsfaktor pro zu dem Punkt D und durch ka und kb   Ermittelt wie weit entlang der Kante der naechste Punkt zu ds ist. Ist ein Sklar und kein Punkt
-                            prof = float(np.clip(prof, 0.0, 1.0)) #Begrenzt t auf [0,1], damit der Punkt auf der Kante bleibt
-                            closest = ka + prof * kab #Der n?chste Punkt auf der Kante zu ds
-                            OD = float(np.linalg.norm(ds - closest)) #Ermittelt den Abstand zwischen Dusenschnittpunkt ds und Kippkante. Erst wird der Abstands-Vektor berechnet, dann die Laenge des Vektors. 
+                        if kipp_in in {"u_x_p", "u_x_n"}:
+                            OD = abs(ds[2] - ka[2])  #Bestimmt den z Unterschied zwischen finalenKippkante und finalenDuse
+                        elif kipp_in in {"u_z_p", "u_z_n"}:
+                            OD = abs(ds[0] - ka[0])  #Bestimmt den x Unterschied zwischen finalenKipkante und der finalenDuse
                         elif kipp_in in {"o_x_p", "o_x_n"}: #OD ist der y Unterschied der finalenKippkante und der finalenDuse
-                            ds = np.array(finalduse["surface"], dtype=float)
-                            ka = np.array(finalkippachse["a"], dtype=float)
                             OD = abs(ds[1] - ka[1])
 
                         print("Abstand zwischen O und D: ", OD)
@@ -801,10 +800,18 @@ if __name__ == "__main__":
                        
                         schwerpunkt_kippachse_abstand = float(np.linalg.norm(schwerpunkt_ka_senk)) #schwerpunkt_ka_senk ist der senkrechte Vektor vom Schwerpunkt zur Kippachse, diesen hab ich schon berechnet. Np.linalg.norm() berechnet dann die Länge des Vektors. So habe ich die Länge vom Schwerpunkt zur Kippachse.
                         #Der Abstand zwischen schwerpunkt und kippachse ist somit der neue y-Wert für Schwerpunkt2 und damit ist der Höhenuntschied:
-                        h=abs(round(float(schwerpunkt_kippachse_abstand) - float(schwerpunkt_pos[1]),5))
+                        h=abs(round(float(schwerpunkt_kippachse_abstand) - float(schwerpunkt_pos[1]),5)) # abs() um ein negatives h zu vermeiden, da sonst die Wurzel negativ würde
                         print("Höhenunterschied:",h)
 
-                        #Berechnung der Kippkraft F
+                        alpha = math.radians(20)
+                        beta = math.radians(10) 
+                        h_schwerpunkt_kippachse_abstand = schwerpunkt_kippachse_abstand *math.cos(alpha)* math.cos(beta)
+                        h_schwerpunkt_pos = schwerpunkt_pos[1] * math.cos(alpha)* math.cos(beta)
+                        h_verkippt = abs(round(float(h_schwerpunkt_kippachse_abstand)-float( h_schwerpunkt_pos),5))
+                        print("Verkippter Höhenunterschied:",h_verkippt)
+                        
+
+                        #Berechnung der Impulskraft F
                         t = 0.1 #s
                         g = 9810 #mm/s2
 
@@ -812,10 +819,15 @@ if __name__ == "__main__":
                         print("Masse:",mass)
                         print("g:",g)
                         print("t:",t)
-
+                        
                         F = math.sqrt((mass * g * h * 2 * math.pow(I_kipp, 2))  / (I_kipp * math.pow(t, 2) * math.pow(OD, 2))) # F in kg/mms2
                         F = round(F / 1000, 5)  # F in kg/ms2 (N)
                         print("Kraft: ",F,("N"))
+
+                        #Berechnung verkippte Impulskraft
+                        F_verkippt = math.sqrt((mass * g * h_verkippt * 2 * math.pow(I_kipp, 2))  / (I_kipp * math.pow(t, 2) * math.pow(OD, 2))) # F in kg/mms2
+                        F_verkippt = round(F_verkippt / 1000, 5)
+                        print("Verkippte Kraft: ",F_verkippt,("N"))
 
                         writer.writerow([ #schreibt eine neue Zeile in die csv 
                             pfad_teil.name,
@@ -827,6 +839,15 @@ if __name__ == "__main__":
                             f"{h:.5f}".replace(".", ","),
                             f"{schwerpunkt_pos[1]:.5f}".replace(".", ","),
                             f"{schwerpunkt_kippachse_abstand:.5f}".replace(".", ","),
+                            f"{F_verkippt:.5f}".replace(".", ","),
+                            f"{h_verkippt:.5f}".replace(".", ","),
+                            f"{h_schwerpunkt_pos:.5f}".replace(".", ","),
+                            f"{h_schwerpunkt_kippachse_abstand:.5f}".replace(".", ","),
+                            
+                
+                
+
+
                         ])
 
     print("CSV geschrieben:", csv_path)

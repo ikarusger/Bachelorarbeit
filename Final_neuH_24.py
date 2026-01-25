@@ -215,13 +215,13 @@ def echte_kanten_und_ecken(
     edge90 = fa_edges[diff <= tol_deg] #Filter nur Kanten, deren Winkel im Toleranzbereich liegen.
     boundary = mesh.edges_boundary if hasattr(mesh, "edges_boundary") else np.empty((0, 2), dtype=int) #Fragt Randkanten des Meshs ab, da sie keine Nachbarfläche haben und damit keinen Winkelwert face_adjacency_angles
     if boundary is not None and len(boundary) > 0: #Prüft ob es Randkanten gibt
-        edge90 = np.vstack([edge90, boundary]) #Fügt die Randkanten zu edge90 hinzu
+        edge90 = np.vstack([edge90, boundary]) #Fügt die Rankanten zu edge90 hinzu
     if len(edge90) == 0:
         return {"edge_indices": np.empty((0, 2), dtype=int), "corner_indices": np.array([], dtype=int),
                 "edge_coords": [], "corner_coords": []} #Wenn es keine edge90, also 90°Kante,  gibt bircht die Funktion ab.
     edge90 = np.unique(np.sort(edge90, axis=1), axis=0)
 
-    #Option B axis parallel edge filtering
+    # OPTION B START: axis-parallel edge filtering
     #Hier wereden nur die achsenparallelen Kanten aus den 90°Kanten edge90 gefiltert
     axis_edges = [] #Liste für alle achsenparallelen Kanten
     axis_dirs = [] #Speicher, in welche Richtung jede gefundene Kante zeigt (0/1/2) x y z 
@@ -512,7 +512,7 @@ if __name__ == "__main__":
             "Kippkraft",
             "Hoehenunterschied",
             "y-Schwerpunkt",
-            "y-Scherpunkt2"
+            "y-Schwerpunkt2",
         ])
 
         for pfad_teil in pfade: #Schleift durch alle Pfade
@@ -635,11 +635,10 @@ if __name__ == "__main__":
 
 
                 pos = positionen_koordinaten[pos_id - 1] #Holt sich die Information aus dem Dictor über die Positionen. position_id label schwerpunkt ecken, kanten, kanten_coords
-                schwerpunkt_pos = pos["schwerpunkt"]  #Transformierte Schwerpunktkoordinaten werden aus dem Dict geholt
-                #pos2 = positionen_koordinaten[1] #Debug
-                #schwerpunkt_pos2 = pos2["schwerpunkt"]
-                print("Schwerpunkt:", schwerpunkt_pos)
-                #print("Schwerpunkt Position 2:", schwerpunkt_pos2)
+                schwerpunkt_pos = pos["schwerpunkt"]  #Transformierte Schwerpunktkoordinaten werden aus dem Dict geholt                
+                pos2 = positionen_koordinaten[1]
+                schwerpunkt_pos2 = pos2["schwerpunkt"]
+                print("Schwerpunkt Position 2:", schwerpunkt_pos2)
 
 
 
@@ -757,12 +756,17 @@ if __name__ == "__main__":
                         ka = np.array(finalkippachse["a"], dtype=float) # Endpunkt a der Kippkante 
                         kb = np.array(finalkippachse["b"], dtype=float) # Endpunkt b der Kippkante
                         kab = kb - ka #Berechenet Richtungsvektor der Kante 
+                        if kipp_in in {"u_x_p", "u_x_n", "u_z_p", "u_z_n"}:
+                            #Berechne den Abstand zwischen des D?senschnittpunkts mit dem Bauteils und der Kippachse. Funktioniert nur f?r DusenU, weil  der Abstand zwischen Duse und Kippachse in x z Richtung bleibt und nicht Dreidimensional ist.
 
-                        if kipp_in in {"u_x_p", "u_x_n"}:
-                            OD = abs(ds[2] - ka[2])  #Bestimmt den z Unterschied zwischen finalenKippkante und finalenDuse
-                        elif kipp_in in {"u_z_p", "u_z_n"}:
-                            OD = abs(ds[0] - ka[0])  #Bestimmt den x Unterschied zwischen finalenKipkante und der finalenDuse
+                            kante_len2 = np.dot(kab, kab) #L?nge der Kanten hoch zwei Skalarprodukt
+                            prof = np.dot(ds - ka, kab) / kante_len2 #Berechne den Projektionsfaktor pro zu dem Punkt D und durch ka und kb   Ermittelt wie weit entlang der Kante der naechste Punkt zu ds ist. Ist ein Sklar und kein Punkt
+                            prof = float(np.clip(prof, 0.0, 1.0)) #Begrenzt t auf [0,1], damit der Punkt auf der Kante bleibt
+                            closest = ka + prof * kab #Der n?chste Punkt auf der Kante zu ds
+                            OD = float(np.linalg.norm(ds - closest)) #Ermittelt den Abstand zwischen Dusenschnittpunkt ds und Kippkante. Erst wird der Abstands-Vektor berechnet, dann die Laenge des Vektors. 
                         elif kipp_in in {"o_x_p", "o_x_n"}: #OD ist der y Unterschied der finalenKippkante und der finalenDuse
+                            ds = np.array(finalduse["surface"], dtype=float)
+                            ka = np.array(finalkippachse["a"], dtype=float)
                             OD = abs(ds[1] - ka[1])
 
                         print("Abstand zwischen O und D: ", OD)
@@ -790,7 +794,14 @@ if __name__ == "__main__":
 
 
                         #Berechnung des Höhenunterschieds
-                        h = abs(round(schwerpunkt_pos2[1] - schwerpunkt_pos[1],5)) #Höhenunterschied des Schwerpunktes vor und nach dem Kippen. Funktioniert nicht für o_x_p und o_y_n
+                        #h = abs(round(schwerpunkt_pos2[1] - schwerpunkt_pos[1],5)) #Höhenunterschied des Schwerpunktes vor und nach dem Kippen. Funktioniert nicht für o_x_p und o_y_n
+                        #Neue Berechnung des Höhenunterschieds
+
+                        
+                       
+                        schwerpunkt_kippachse_abstand = float(np.linalg.norm(schwerpunkt_ka_senk)) #schwerpunkt_ka_senk ist der senkrechte Vektor vom Schwerpunkt zur Kippachse, diesen hab ich schon berechnet. Np.linalg.norm() berechnet dann die Länge des Vektors. So habe ich die Länge vom Schwerpunkt zur Kippachse.
+                        #Der Abstand zwischen schwerpunkt und kippachse ist somit der neue y-Wert für Schwerpunkt2 und damit ist der Höhenuntschied:
+                        h=abs(round(float(schwerpunkt_kippachse_abstand) - float(schwerpunkt_pos[1]),5))
                         print("Höhenunterschied:",h)
 
                         #Berechnung der Kippkraft F
@@ -815,7 +826,7 @@ if __name__ == "__main__":
                             f"{F:.5f}".replace(".", ","),
                             f"{h:.5f}".replace(".", ","),
                             f"{schwerpunkt_pos[1]:.5f}".replace(".", ","),
-                            f"{schwerpunkt_pos2[1]:.5f}".replace(".", ","),
+                            f"{schwerpunkt_kippachse_abstand:.5f}".replace(".", ","),
                         ])
 
     print("CSV geschrieben:", csv_path)
