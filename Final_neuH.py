@@ -513,10 +513,10 @@ if __name__ == "__main__":
             "Hoehenunterschied",
             "y-Schwerpunkt",
             "y-Schwerpunkt2",
-            "Impulskraft verkippt",
-            "Hoehenunterschied verkippt",
-            "y-Schwerpunkt verkippt",
-            "y-Schwerpunkt2 verkippt"
+           #"Impulskraft verkippt",
+           #"Hoehenunterschied verkippt",
+           #"y-Schwerpunkt verkippt",
+           #"y-Schwerpunkt2 verkippt"
         ])
 
         for pfad_teil in pfade: #Schleift durch alle Pfade
@@ -773,7 +773,7 @@ if __name__ == "__main__":
                             continue
 
                         #Berechnung des Maassenträgheitsmoments  (Mesh muss geschlossen sein)
-                        rho = 1.1e-6  # kg/mm^3
+                        rho = 1.287e-6  # kg/mm^3
                         I_kipp = None
 
                         kante_len1 = np.linalg.norm(kab) #Kantenlänge
@@ -825,9 +825,9 @@ if __name__ == "__main__":
                         print("Kraft: ",F,("N"))
 
                         #Berechnung verkippte Impulskraft
-                        F_verkippt = math.sqrt((mass * g * h_verkippt * 2 * math.pow(I_kipp, 2))  / (I_kipp * math.pow(t, 2) * math.pow(OD, 2))) # F in kg/mms2
-                        F_verkippt = round(F_verkippt / 1000, 5)
-                        print("Verkippte Kraft: ",F_verkippt,("N"))
+                        #F_verkippt = math.sqrt((mass * g * h_verkippt * 2 * math.pow(I_kipp, 2))  / (I_kipp * math.pow(t, 2) * math.pow(OD, 2))) # F in kg/mms2
+                        #F_verkippt = round(F_verkippt / 1000, 5)
+                        #print("Verkippte Kraft: ",F_verkippt,("N"))
 
                         writer.writerow([ #schreibt eine neue Zeile in die csv 
                             pfad_teil.name,
@@ -839,10 +839,10 @@ if __name__ == "__main__":
                             f"{h:.5f}".replace(".", ","),
                             f"{schwerpunkt_pos[1]:.5f}".replace(".", ","),
                             f"{schwerpunkt_kippachse_abstand:.5f}".replace(".", ","),
-                            f"{F_verkippt:.5f}".replace(".", ","),
-                            f"{h_verkippt:.5f}".replace(".", ","),
-                            f"{h_schwerpunkt_pos:.5f}".replace(".", ","),
-                            f"{h_schwerpunkt_kippachse_abstand:.5f}".replace(".", ","),
+                            #f"{F_verkippt:.5f}".replace(".", ","),
+                            #f"{h_verkippt:.5f}".replace(".", ","),
+                            #f"{h_schwerpunkt_pos:.5f}".replace(".", ","),
+                            #f"{h_schwerpunkt_kippachse_abstand:.5f}".replace(".", ","),
                             
                 
                 
