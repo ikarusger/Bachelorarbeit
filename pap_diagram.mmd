@@ -1,0 +1,100 @@
+flowchart TD
+  A([Start]) --> B[Initialisierung\n- Konstanten/Dataclass\n- Duesen-Datenbank]
+  B --> C{__main__?}
+  C -- nein --> Z([Ende])
+  C -- ja --> D[Definiere STL-Pfade\n+ CSV-Pfad]
+  D --> E[CSV oeffnen\nWriter + Kopfzeile]
+  E --> F{Schleife: fuer jeden STL-Pfad}
+
+  F --> G[Mesh laden\nload_mesh(pfad)]
+  G --> H[Transform: flip_x (Spiegelung X)]
+  H --> I[Debug: echte Kanten/Ecken\n echte_kanten_und_ecken(mesh)]
+  I --> J[Debug: Duesen-Positionen ausgeben]
+  J --> K[Nozzle-Marker bauen\ncreate_nozzle_cylinders]
+  K --> L[24 Rotationen erzeugen\npositionieren24]
+  L --> M[Schwerpunkt (center_mass)]
+
+  M --> N{Schleife: fuer jede Position}
+  N --> N1[Rotationsmatrix R3\nT = I; T[:3,:3]=R3]
+  N1 --> N2[Mesh kopieren & rotieren]
+  N2 --> N3[Bounding Box\nEcke e5 bestimmen]
+  N3 --> N4[Shift: T_shift\nMesh auf Ursprung]
+  N4 --> N5[Schwerpunkt transformieren]
+  N5 --> N6[Ray-Startwerte y_min/z_min]
+  N6 --> N7[Transf. echte Kanten/Ecken\n echte_kanten_und_ecken(mesh)]
+  N7 --> N8[Position-Dict speichern\n(position_id, label, ecken, kanten, T_total, y_min, z_min)]
+  N8 --> N9[Export STL + Nozzles\nin Ausgabefolder]
+  N9 --> N{naechste Position?}
+  N --> O[Mesh-Diagnose\ndiagnose_mesh]
+
+  O --> P{Schleife: fuer jede Position (pos_id)}
+  P --> P1[Pos-Daten holen\nschwerpunkt_pos, ecken, kanten]
+  P1 --> P2[Debug-Ausgabe Ecken/Kanten]
+
+  P2 --> Q{Schleife: kipp_in in\n[o_x_p, o_x_n, u_x_p, u_x_n, u_z_p, u_z_n]}
+  Q --> Q1[Moegliche Duesen bestimmen\nkipp_duse(kipp_in, schwerpunkt_pos)]
+  Q1 --> Q2[Mesh fuer Position\nT_total anwenden]
+  Q2 --> Q3[Zielrotation bestimmen\nkipp_in_to_rot + aktuelle Rotation]
+  Q3 --> Q4[Zielposition suchen\nnp.allclose in 24 Rotationen]
+  Q4 --> Q5[Schwerpunkt2 aus Zielpos]
+  Q5 --> Q6[Ray-Tests je Duese\nTreffer? -> finaldusen]
+
+  Q6 --> Q7{finaldusen leer?}
+  Q7 -- ja --> Q
+  Q7 -- nein --> R{Schleife: fuer jede finale Duese}
+
+  R --> R1[Kippachse bestimmen\nfind_kippachse(pos, kipp_in)]
+  R1 --> R2{Kippachse gefunden?}
+  R2 -- nein --> R
+  R2 -- ja --> R3[Abstand OD berechnen\nje nach kipp_in]
+  R3 --> R4{OD vorhanden?}
+  R4 -- nein --> R
+  R4 -- ja --> R5[Massentraegheit:\n- Mesh mass_properties\n- I_kipp berechnen]
+
+  R5 --> R6[Hoehenunterschied h\n+ verkipptes h]
+  R6 --> R7[Impulskraft F + F_verkippt]
+  R7 --> R8[CSV-Zeile schreiben]
+  R8 --> R{naechste Duese?}
+
+  R --> Q{naechstes kipp_in?}
+  Q --> P{naechste Position?}
+  P --> F{naechste STL-Datei?}
+  F --> Y[CSV geschrieben]
+  Y --> Z([Ende])
+
+  subgraph EK["Funktion: echte_kanten_und_ecken(mesh)"]
+    EK1[Hole face_adjacency_edges/angles] --> EK2{Kanten vorhanden?}
+    EK2 -- nein --> EKZ[Leere Rueckgabe]
+    EK2 -- ja --> EK3[Filter nach 90deg +/- tol]
+    EK3 --> EK4[Boundary-Kanten hinzufuegen]
+    EK4 --> EK5{Kanten vorhanden?}
+    EK5 -- nein --> EKZ
+    EK5 -- ja --> EK6[axis_richtung auf Kanten\n(achsenparallel?)]
+    EK6 --> EK7{Achsenparallel?}
+    EK7 -- nein --> EKZ
+    EK7 -- ja --> EK8[Axes pro Vertex sammeln]
+    EK8 --> EK9[Ecken: min_corner_axes]
+    EK9 --> EK10[edge_coords + corner_coords]
+    EK10 --> EK11[Rueckgabe Dict]
+  end
+
+  subgraph KD["Funktion: kipp_duse(kipp_in, schwerpunkt)"]
+    KD1{kipp_in Typ?} --> KD2[Filter Duesen nach\nKraft + Lage relativ zum Schwerpunkt]
+    KD2 --> KD3[Abstaende dx/dy/dz]
+    KD3 --> KD4[Zusatzfilter\nz.B. dx < dy\noder dx < dz]
+    KD4 --> KD5[Liste zurueckgeben]
+  end
+
+  subgraph KA["Funktion: find_kippachse(pos, kipp_in)"]
+    KA1[Min/Max pro Achse\naus Eckpunkten]
+    KA1 --> KA2{kipp_in Typ?}
+    KA2 --> KA3[Setze a,b (Kippkante)\nueber min/max]
+    KA3 --> KA4[Runde + Indizes suchen]
+    KA4 --> KA5[Rueckgabe Kante]
+  end
+
+  subgraph P24["Funktion: positionieren24()"]
+    P1[6 Basis-Rotationen\n(x0, x180, y90, y270, x90, x270)]
+    P1 --> P2[Je Basis: 4x z-Rotation]
+    P2 --> P3[Liste (R3, label)]
+  end
