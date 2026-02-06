@@ -771,7 +771,7 @@ if __name__ == "__main__":
                             continue
 
                         #Berechnung des Maassenträgheitsmoments  (Mesh muss geschlossen sein)
-                        rho = 1.1e-6  # kg/mm^3
+                        rho = 1.287e-6  # kg/mm^3
                         I_kipp = None
 
                         kante_len1 = np.linalg.norm(kab) #Kantenlänge
