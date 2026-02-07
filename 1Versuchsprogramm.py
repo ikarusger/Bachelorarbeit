@@ -511,8 +511,11 @@ if __name__ == "__main__":
             "Duese",
             "Impulskraft",
             "Hoehenunterschied",
-            "y-Schwerpunkt",
-            "y-Schwerpunkt2",
+            "y-Koordinate des Schwerpunkts vor dem Kippen",
+            "y-Koordinate des Schwerpunkt nach dem Kippen",
+            "Impulskraft alter Hoehenunterschied",
+            "alter Hoehenunterschied",
+            "alte y-Koordinate des Schwerpunkts nach dem Kippen",
            #"Impulskraft verkippt",
            #"Hoehenunterschied verkippt",
            #"y-Schwerpunkt verkippt",
@@ -792,12 +795,11 @@ if __name__ == "__main__":
 
 
 
-                        #Berechnung des Höhenunterschieds
-                        #h = abs(round(schwerpunkt_pos2[1] - schwerpunkt_pos[1],5)) #Höhenunterschied des Schwerpunktes vor und nach dem Kippen. Funktioniert nicht für o_x_p und o_y_n
-                        #Neue Berechnung des Höhenunterschieds
-
+                        #Berechnung des alten Höhenunterschieds
+                        h_alt = abs(round(schwerpunkt_pos2[1] - schwerpunkt_pos[1],5)) #Höhenunterschied des Schwerpunktes vor und nach dem Kippen. Funktioniert nicht für o_x_p und o_y_n
                         
-                       
+
+                        #Neue Berechnung des Höhenunterschieds
                         schwerpunkt_kippachse_abstand = float(np.linalg.norm(schwerpunkt_ka_senk)) #schwerpunkt_ka_senk ist der senkrechte Vektor vom Schwerpunkt zur Kippachse, diesen hab ich schon berechnet. Np.linalg.norm() berechnet dann die Länge des Vektors. So habe ich die Länge vom Schwerpunkt zur Kippachse.
                         #Der Abstand zwischen schwerpunkt und kippachse ist somit der neue y-Wert für Schwerpunkt2 und damit ist der Höhenuntschied:
                         h=abs(round(float(schwerpunkt_kippachse_abstand) - float(schwerpunkt_pos[1]),5)) # abs() um ein negatives h zu vermeiden, da sonst die Wurzel negativ würde
@@ -824,6 +826,11 @@ if __name__ == "__main__":
                         F = round(F / 1000, 5)  # F in kg/ms2 (N)
                         print("Kraft: ",F,("N"))
 
+                        #Berechnung der Impulskraft F mit dem alten Höhenunterschied 
+                        F_alt = math.sqrt((mass * g * h_alt * 2 * math.pow(I_kipp, 2))  / (I_kipp * math.pow(t, 2) * math.pow(OD, 2))) # F_alt in kg/mms2
+                        F_alt = round(F_alt / 1000, 5)  # F in kg/ms2 (N)
+                        print("Kraft: ",F_alt,("N"))
+
                         #Berechnung verkippte Impulskraft
                         #F_verkippt = math.sqrt((mass * g * h_verkippt * 2 * math.pow(I_kipp, 2))  / (I_kipp * math.pow(t, 2) * math.pow(OD, 2))) # F in kg/mms2
                         #F_verkippt = round(F_verkippt / 1000, 5)
@@ -839,6 +846,9 @@ if __name__ == "__main__":
                             f"{h:.5f}".replace(".", ","),
                             f"{schwerpunkt_pos[1]:.5f}".replace(".", ","),
                             f"{schwerpunkt_kippachse_abstand:.5f}".replace(".", ","),
+                            f"{F_alt:.5f}".replace(".", ","),
+                            f"{h_alt:.5f}".replace(".", ","),
+                            f"{schwerpunkt_pos2[1]:.5f}".replace(".", ","),
                             #f"{F_verkippt:.5f}".replace(".", ","),
                             #f"{h_verkippt:.5f}".replace(".", ","),
                             #f"{h_schwerpunkt_pos:.5f}".replace(".", ","),
