@@ -21,15 +21,12 @@ class Duse:
 
 # Auswahl des Punktes, auf den Verschoben werden soll
 # Koordinatensystem-Konvention:
-# x = vorne, y = links, z = oben
+# x y z 
 def bestimme_zielpunkt(
     kipp_in: str,
-    kante_x_laenge: float,
-    kante_z_laenge: float,
     schwerpunkt_rot: Vec3,
-) -> np.ndarray:  # kante_x_laenge ist die Länge der hinteren rechten unteren Kante, die parallel zur x Kante verläuft
-    sx, sy, sz = float(schwerpunkt_rot[0]), float(schwerpunkt_rot[1]), float(schwerpunkt_rot[2])
-
+) -> np.ndarray:    
+    # Um die Position der rechte hintere untere Ecke zu bestimmen wird der Abstand zwischen der Kippdüsen und des Schwerpunktes berechnet. U2/6/10/14/18 (-25, 0 x) U9/10/11/12 (0, 0, 40)
     zielpunkte_pro_kipp: Dict[str, Vec3] = {
         "o_x_p": (0, 0.0, 0.0),
         "o_x_n": (0, 0.0, 0.0),
@@ -46,27 +43,27 @@ def bestimme_zielpunkt(
 
 # Dusen "Datenbank"
 # Zugriff z.B.: print(duesen["DuseU1"].pos[0])
-duesen: Dict[str, Duse] = {   #   x    y    z
-    "DuseU1": Duse("DuseU1", (-10.0, 0.0, 10.0), "u"),
+duesen: Dict[str, Duse] = {   #   x    y    z            #Die anderen Duesen werden nicht mehr benötigt
+    #"DuseU1": Duse("DuseU1", (-10.0, 0.0, 10.0), "u"),
     "DuseU2": Duse("DuseU2", (-25.0, 0.0, 10.0), "u"),
-    "DuseU3": Duse("DuseU3", (-40.0, 0.0, 10.0), "u"),
-    "DuseU4": Duse("DuseU4", (-55.0, 0.0, 10.0), "u"),
-    "DuseU5": Duse("DuseU5", (-10.0, 0.0, 25.0), "u"),
+    #"DuseU3": Duse("DuseU3", (-40.0, 0.0, 10.0), "u"),
+    #"DuseU4": Duse("DuseU4", (-55.0, 0.0, 10.0), "u"),
+    #"DuseU5": Duse("DuseU5", (-10.0, 0.0, 25.0), "u"),
     "DuseU6": Duse("DuseU6", (-25.0, 0.0, 25.0), "u"),
-    "DuseU7": Duse("DuseU7", (-40.0, 0.0, 25.0), "u"),
-    "DuseU8": Duse("DuseU8", (-55.0, 0.0, 25.0), "u"),
+    #"DuseU7": Duse("DuseU7", (-40.0, 0.0, 25.0), "u"),
+    #"DuseU8": Duse("DuseU8", (-55.0, 0.0, 25.0), "u"),
     "DuseU9": Duse("DuseU9", (-10.0, 0.0, 40.0), "u"),
     "DuseU10": Duse("DuseU10", (-25.0, 0.0, 40.0), "u"),
     "DuseU11": Duse("DuseU11", (-40.0, 0.0, 40.0), "u"),
     "DuseU12": Duse("DuseU12", (-55.0, 0.0, 40.0), "u"),
-    "DuseU13": Duse("DuseU13", (-10.0, 0.0, 55.0), "u"),
+    #"DuseU13": Duse("DuseU13", (-10.0, 0.0, 55.0), "u"),
     "DuseU14": Duse("DuseU14", (-25.0, 0.0, 55.0), "u"),
-    "DuseU15": Duse("DuseU15", (-40.0, 0.0, 55.0), "u"),
-    "DuseU16": Duse("DuseU16", (-55.0, 0.0, 55.0), "u"),
-    "DuseU17": Duse("DuseU17", (-10.0, 0.0, 70.0), "u"),
+    #"DuseU15": Duse("DuseU15", (-40.0, 0.0, 55.0), "u"),
+    #"DuseU16": Duse("DuseU16", (-55.0, 0.0, 55.0), "u"),
+    #"DuseU17": Duse("DuseU17", (-10.0, 0.0, 70.0), "u"),
     "DuseU18": Duse("DuseU18", (-25.0, 0.0, 70.0), "u"),
-    "DuseU19": Duse("DuseU19", (-40.0, 0.0, 70.0), "u"),
-    "DuseU20": Duse("DuseU20", (-55.0, 0.0, 70.0), "u"),
+    #"DuseU19": Duse("DuseU19", (-40.0, 0.0, 70.0), "u"),
+    #"DuseU20": Duse("DuseU20", (-55.0, 0.0, 70.0), "u"),
 
 
     "DuseO1": Duse("DuseO1", (-10.0, 10.0, 0.0), "o"),  # DuseO O ist keine Null sonder ein großes o
@@ -327,6 +324,7 @@ def diagnose_mesh(mesh: trimesh.Trimesh, angle_deg: float = 90.0, tol_deg: float
 
 #Bestimmt welche Düse zum Kippen zu gebrauchen ist
 def kipp_duse(kipp_in: str, schwerpunkt: Vec3) -> list[tuple[Duse, float, float | None, float | None]] | None:    #Kippmöglichkeiten   schwerpunkt wird als transofmirten Vector ausgegeben x, y, z
+    
     if kipp_in == "o_x_p":
         funk_duesen = []                    # Liste mit Düsen die zum Kippen verwendet werden können d: das Duse-Objekt  dx: Abstand in x zum Schwerpunkt   dz: Abstand in z um Schwerpunkt
         for d in duesen.values():
@@ -446,6 +444,7 @@ def kipp_duse(kipp_in: str, schwerpunkt: Vec3) -> list[tuple[Duse, float, float 
         return funk_duesen
     
     
+    
 
 
 def find_kippachse(pos: dict, kipp_in: str) -> dict | None: #Die Kippkante wird anhand der echten Bauteilkanten bestimmt. Es kann auch eine neue Kippkanten anhand z.B. der kleinsten Punkte erstellt werden. Das ist notwendig wenn die Bauteilkante unterborchn wird.
@@ -536,6 +535,9 @@ if __name__ == "__main__":
             "Impulskraft alter Hoehenunterschied",
             "alter Hoehenunterschied",
             "alte y-Koordinate des Schwerpunkts nach dem Kippen",
+            "zielpunkt_x",
+            "zielpunkt_y",
+            "zielpunkt_z",
            #"Impulskraft verkippt",
            #"Hoehenunterschied verkippt",
            #"y-Schwerpunkt verkippt",
@@ -590,14 +592,15 @@ if __name__ == "__main__":
                 m_ver_orie = m.copy()     # Kopie, Original bleibt unverändert
                 m_ver_orie.apply_transform(T)  #mesh wird durch T orientiert
                 bounds_rot = m_ver_orie.bounds
-                minx_rot, miny_rot, minz_rot = bounds_rot[0]
-                maxx_rot, maxy_rot, maxz_rot = bounds_rot[1]
-                e5_rot = np.array([maxx_rot, miny_rot, minz_rot], dtype=float)
+                minx_rot, miny_rot, minz_rot = bounds_rot[0] #Untere Ecke der Bounding box 
+                maxx_rot, maxy_rot, maxz_rot = bounds_rot[1]#Obere Ecke der Bounding box
+                e5_rot = np.array([maxx_rot, miny_rot, minz_rot], dtype=float)#Baut den Punkt rechts hinten unten x = max, y = min, z = min   Diese Punkt soll verschoben werden Punkt (10,10,10)
                 T_to_origin = np.eye(4)
-                T_to_origin[:3, 3] = -e5_rot
-                m_ver_orie.apply_transform(T_to_origin)
+                T_to_origin[:3, 3] = -e5_rot #Verschiebung um minus die Koordinaten des Punktes e5 (-10,-10,-10) T_shift verschiebt auf den Ursprung (0,0,0) 
+                m_ver_orie.apply_transform(T_to_origin) #ganzes mesh wird durch T_shift verschoben
+                 #m_ver_orie ist das verschobenen und orientierte Mesh
                 T_origin = T_to_origin @ T
-                schwerpunkt_rot = (T_origin @ schwerpunkt_h)[:3]
+                schwerpunkt_rot = (T_origin @ schwerpunkt_h)[:3] #Der Schwerpunkt wird durch T_shift verschoben und duch T rotiert 
 
                 echte =  echte_kanten_und_ecken(m_ver_orie, angle_deg=90.0, tol_deg=1.0) # transormierte echte Ecken und Kanten aus der Geometrie
                 #echte_kanten_und_ecken gibt die Koordinaten der Ecken und Kanten soei die Ecken Indizese und die Kanten Indizes
@@ -653,35 +656,32 @@ if __name__ == "__main__":
 
 
                 #Auswahl wie gekippt werden soll
-                kipp_inputs = ["o_x_p", "o_x_n", "u_x_p", "u_x_n", "u_z_p", "u_z_n"]  #Um o_y_p und o_y_n muss nicht mehr gekippt werden
+                kipp_inputs = [  "u_x_n",  "u_z_n"]  #Um o_y_p und o_y_n "u_x_p" "u_z_p","o_x_p", "o_x_n", muss nicht mehr gekippt werden
                 for kipp_in in kipp_inputs: #Schleife, die durch alle kipp_inputs schleift
 
                     # Mesh liegt je Position bereits auf (0,0,0), danach Verschiebung auf Zielpunkt.
-                    T_pos_origin = pos["T_origin"]
-                    m_sel = m.copy()
-                    m_sel.apply_transform(T_pos_origin)
+                    T_pos_origin = pos["T_origin"] #Holt die gespeicherte Transfomrationsmatrix des rotierten und auf den Ursprung verschobenen Meshes
+                    m_sel = m.copy() #Kopiert das Meshes
+                    m_sel.apply_transform(T_pos_origin) #Bringt die Kopie in die T_origin position
                     bounds_sel = m_sel.bounds
                     minx, miny, minz = bounds_sel[0]
-                    maxx, maxy, maxz = bounds_sel[1]
-                    # Laengen der unteren rechten hinteren Kanten
-                    # parallel zur x- bzw. z-Achse.
-                    
-                    kante_x_laenge = maxx - minx
-                    kante_z_laenge = maxz - minz
-                    zielpunkt = bestimme_zielpunkt(kipp_in, kante_x_laenge, kante_z_laenge, tuple(schwerpunkt_pos))
+                    maxx, maxy, maxz = bounds_sel[1] #Stellt die kleinsten und größten Koordinaten des aktuellen Meshes bereit
+
+                    y_min = m_sel.bounds[0][1] - 1.0 # Stellt die Startpunkte für den Strahlentest bereit.Immer 1 unter der Koordinate
+                    z_min = m_sel.bounds[0][2] - 1.0
+
+                    zielpunkt = bestimme_zielpunkt(kipp_in, tuple(schwerpunkt_pos)) #Wählt den richtigen Zielpunkt abhängig von kipp_in aus
                     T_shift = np.eye(4)
                     T_shift[:3, 3] = zielpunkt
                     T_total = T_shift @ T_pos_origin
-                    m_sel.apply_transform(T_shift)
+                    m_sel.apply_transform(T_shift) #verschiebt das Mesh auf den Zielpunkt
 
-                    schwerpunkt_pos = (T_total @ schwerpunkt_h)[:3]
-                    y_min = m_sel.bounds[0][1] - 1.0
-                    z_min = m_sel.bounds[0][2] - 1.0
+                    schwerpunkt_pos = (T_total @ schwerpunkt_h)[:3] #Transformiert den Schwerpunkt
 
-                    echte_shifted = echte_kanten_und_ecken(m_sel, angle_deg=90.0, tol_deg=1.0)
-                    pos_shifted = {
-                        "ecken": echte_shifted["corner_coords"],
-                    }
+                    echte_kanten_und_ecken_transformiert = echte_kanten_und_ecken(m_sel, angle_deg=90.0, tol_deg=1.0) 
+                    pos_transformiert = { #Die Koordinaten Ecken der echten_kanten_und_ecken werden auf den Zielpunkt verschoben.
+                        "ecken": echte_kanten_und_ecken_transformiert["corner_coords"],
+                    } #Die Koordinaten der verschobenen Ecken in pos_transfomiert brauche ich, um die richtige Kippachse zu finden find_kippachse()
 
                     nozzle_positions = []                 #Dusen-Koordinaten aus dict werden zu Kugeln
                     for d_marker in duesen.values():
@@ -720,24 +720,29 @@ if __name__ == "__main__":
                             z_nam = label
                             break
                     print("Schwerpunkt2 label: ", z_nam, "Schwerpunkt2 pos:", z_pos)
+                    #Verschiebt und rotiert den Schwerpunkt2 erst auf den Ursprung und dann auf die Zielposition, dazu wird das mesh der neuen Position wie das Mesh der aktuellen Position verschoben rotiert und nocheinmal verschoben
                     R3_target, _ = rotations[z_pos - 1]
                     T_target = np.eye(4)
                     T_target[:3, :3] = R3_target
                     m_target = m.copy()
                     m_target.apply_transform(T_target)
-                    bounds_target = m_target.bounds
+                    bounds_target = m_target.bounds  
                     minx_t, miny_t, minz_t = bounds_target[0]
                     maxx_t, maxy_t, maxz_t = bounds_target[1]
                     e5_target = np.array([maxx_t, miny_t, minz_t], dtype=float)
+
                     T_shift_target = np.eye(4)
                     T_shift_target[:3, 3] = -e5_target
                     T_origin_target = T_shift_target @ T_target
+
                     T_to_ziel_target = np.eye(4)
                     T_to_ziel_target[:3, 3] = zielpunkt
                     T_total_target = T_to_ziel_target @ T_origin_target
                     schwerpunkt_pos2 = (T_total_target @ schwerpunkt_h)[:3]
                     print("Koordinaten des Schwerpunkts2: ", tuple(np.round(schwerpunkt_pos2, 5)))
                     print("Schwerpunkt1 zum Vergleich:", schwerpunkt_pos) #Debug
+
+
 
                     #Berechnung der finalen Duesen
                     finaldusen = []
@@ -783,7 +788,7 @@ if __name__ == "__main__":
 
 
                         #Berechnung der Kippachse
-                        finalkippachse = find_kippachse(pos_shifted, kipp_in)  #Kippachse wird in der Funktion bestimmt alle Koordianten werden in pos sowie die einegabe kipp_in übergeben
+                        finalkippachse = find_kippachse(pos_transformiert, kipp_in)  #Kippachse wird in der Funktion bestimmt alle Koordianten werden von pos_transformiert sowie die einegabe kipp_in übergeben
                         if finalkippachse is not None:
                             print("Kippkante: ",finalkippachse)
                         else:
@@ -883,6 +888,9 @@ if __name__ == "__main__":
                             f"{F_alt:.5f}".replace(".", ","),
                             f"{h_alt:.5f}".replace(".", ","),
                             f"{schwerpunkt_pos2[1]:.5f}".replace(".", ","),
+                            f"{zielpunkt[0]:.5f}".replace(".", ","),
+                            f"{zielpunkt[1]:.5f}".replace(".", ","),
+                            f"{zielpunkt[2]:.5f}".replace(".", ","),
                             #f"{F_verkippt:.5f}".replace(".", ","),
                             #f"{h_verkippt:.5f}".replace(".", ","),
                             #f"{h_schwerpunkt_pos:.5f}".replace(".", ","),
