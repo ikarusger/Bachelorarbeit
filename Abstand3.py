@@ -528,15 +528,11 @@ if __name__ == "__main__":
             "kipp_in",
             "Kippposition",
             "Duese",
-            "Impulskraft_t0_05s",
-            "Impulskraft_t0_10s",
-            "Impulskraft_t0_20s",
+            "Impulskraft",
             "Hoehenunterschied",
             "y-Koordinate des Schwerpunkts vor dem Kippen",
             "y-Koordinate des Schwerpunkt nach dem Kippen",
-            "Impulskraft_alterHoehenunterschied_t0_05s",
-            "Impulskraft_alterHoehenunterschied_t0_10s",
-            "Impulskraft_alterHoehenunterschied_t0_20s",
+            "Impulskraft alter Hoehenunterschied",
             "alter Hoehenunterschied",
             "alte y-Koordinate des Schwerpunkts nach dem Kippen",
             "zielpunkt_x",
@@ -856,27 +852,23 @@ if __name__ == "__main__":
                         print("Verkippter Höhenunterschied:",h_verkippt)
                         
 
-                        #Berechnung der Impulskraft F fuer drei verschiedene Zeiten
-                        t_werte = [0.05, 0.10, 0.20] #s
+                        #Berechnung der Impulskraft F
+                        t = 0.1 #s
                         g = 9810 #mm/s2
 
                         #Debug
                         print("Masse:",mass)
                         print("g:",g)
-                        impulskraefte = {}
-                        impulskraefte_alt = {}
-                        for t in t_werte:
-                            F_t = math.sqrt((mass * g * h * 2 * math.pow(I_kipp, 2))  / (I_kipp * math.pow(t, 2) * math.pow(OD, 2))) # F in kg/mms2
-                            F_t = round(F_t / 1000, 5)  # F in kg/ms2 (N)
-                            impulskraefte[t] = F_t
-                            print(f"Kraft bei t={t:.2f}s: ", F_t, ("N"))
+                        print("t:",t)
+                        
+                        F = math.sqrt((mass * g * h * 2 * math.pow(I_kipp, 2))  / (I_kipp * math.pow(t, 2) * math.pow(OD, 2))) # F in kg/mms2
+                        F = round(F / 1000, 5)  # F in kg/ms2 (N)
+                        print("Kraft: ",F,("N"))
 
-                            #Berechnung der Impulskraft mit dem alten Höhenunterschied für drei Zeiten
-
-                            F_alt_t = math.sqrt((mass * g * h_alt * 2 * math.pow(I_kipp, 2))  / (I_kipp * math.pow(t, 2) * math.pow(OD, 2))) # F_alt in kg/mms2
-                            F_alt_t = round(F_alt_t / 1000, 5)  # F in kg/ms2 (N)
-                            impulskraefte_alt[t] = F_alt_t
-                            print(f"Kraft_alt bei t={t:.2f}s: ", F_alt_t, ("N"))
+                        #Berechnung der Impulskraft F mit dem alten Höhenunterschied 
+                        F_alt = math.sqrt((mass * g * h_alt * 2 * math.pow(I_kipp, 2))  / (I_kipp * math.pow(t, 2) * math.pow(OD, 2))) # F_alt in kg/mms2
+                        F_alt = round(F_alt / 1000, 5)  # F in kg/ms2 (N)
+                        print("Kraft: ",F_alt,("N"))
 
                         #Berechnung verkippte Impulskraft
                         #F_verkippt = math.sqrt((mass * g * h_verkippt * 2 * math.pow(I_kipp, 2))  / (I_kipp * math.pow(t, 2) * math.pow(OD, 2))) # F in kg/mms2
@@ -889,15 +881,11 @@ if __name__ == "__main__":
                             kipp_in,
                             z_pos,
                             finalduse["duse"].name,
-                            f"{impulskraefte[0.05]:.5f}".replace(".", ","),
-                            f"{impulskraefte[0.10]:.5f}".replace(".", ","),
-                            f"{impulskraefte[0.20]:.5f}".replace(".", ","),
+                            f"{F:.5f}".replace(".", ","),
                             f"{h:.5f}".replace(".", ","),
                             f"{schwerpunkt_pos[1]:.5f}".replace(".", ","),
                             f"{schwerpunkt_kippachse_abstand:.5f}".replace(".", ","),
-                            f"{impulskraefte_alt[0.05]:.5f}".replace(".", ","),
-                            f"{impulskraefte_alt[0.10]:.5f}".replace(".", ","),
-                            f"{impulskraefte_alt[0.20]:.5f}".replace(".", ","),
+                            f"{F_alt:.5f}".replace(".", ","),
                             f"{h_alt:.5f}".replace(".", ","),
                             f"{schwerpunkt_pos2[1]:.5f}".replace(".", ","),
                             f"{zielpunkt[0]:.5f}".replace(".", ","),
