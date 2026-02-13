@@ -515,11 +515,17 @@ def create_nozzle_cylinders(positions: list[np.ndarray]) -> trimesh.Trimesh | No
 if __name__ == "__main__": 
     #  Pfad zu  STL-Datei  
     pfade = [
-        Path(r"G:\Andere Computer\Mein Computer (2)\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Qf4i.stl"),
-        Path(r"G:\Andere Computer\Mein Computer (2)\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Ql4i.stl"),
-        Path(r"G:\Andere Computer\Mein Computer (2)\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Rk2i.stl"),
+        #Path(r"G:\Andere Computer\Mein Computer (2)\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Qf4i.stl"),
+        #Path(r"G:\Andere Computer\Mein Computer (2)\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Ql4i.stl"),
+        #Path(r"G:\Andere Computer\Mein Computer (2)\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Rk2i.stl"),
+        Path(r"C:\Users\micha\Desktop\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Qf4i.stl"),
+        Path(r"C:\Users\micha\Desktop\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Ql4i.stl"),
+        Path(r"C:\Users\micha\Desktop\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Rk2i.stl"),
     ]
-    csv_path = Path(r"G:\Andere Computer\Mein Computer (2)\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\kippkraft_tabelle.csv") #Pfad der cvs
+    #csv_path = Path(r"G:\Andere Computer\Mein Computer (2)\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\kippkraft_tabelle.csv")
+    csv_path = Path(r"C:\Users\micha\Desktop\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\kippkraft_tabelle.csv")
+
+     #Pfad der cvs
     with csv_path.open("w", newline="", encoding="utf-8") as csv_file: #Öffnet die Datei und sorgt dafür, dass sie am Ende wieder geschlossen wird
         writer = csv.writer(csv_file, delimiter=";") # erstellt einen writer
         writer.writerow([ #Schreibt eine Kopfzeile
@@ -542,6 +548,7 @@ if __name__ == "__main__":
             "zielpunkt_x",
             "zielpunkt_y",
             "zielpunkt_z",
+            "Werkstueckhoehe_Position",
            #"Impulskraft verkippt",
            #"Hoehenunterschied verkippt",
            #"y-Schwerpunkt verkippt",
@@ -670,6 +677,7 @@ if __name__ == "__main__":
                     bounds_sel = m_sel.bounds
                     minx, miny, minz = bounds_sel[0]
                     maxx, maxy, maxz = bounds_sel[1] #Stellt die kleinsten und größten Koordinaten des aktuellen Meshes bereit
+                    werkstueckhoehe_position = float(maxy - miny)
 
                     y_min = m_sel.bounds[0][1] - 1.0 # Stellt die Startpunkte für den Strahlentest bereit.Immer 1 unter der Koordinate
                     z_min = m_sel.bounds[0][2] - 1.0
@@ -692,7 +700,8 @@ if __name__ == "__main__":
                         p = np.array(d_marker.pos, dtype=float)
                         nozzle_positions.append(p)
                     nozzle_markers = create_nozzle_cylinders(nozzle_positions) #Erstellt Kugeln statt Zylinder
-                    out_dir = Path(r"G:\Andere Computer\Mein Computer (2)\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Modelle")
+                    #out_dir = Path(r"G:\Andere Computer\Mein Computer (2)\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Modelle")
+                    out_dir = Path(r"C:\Users\micha\Desktop\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Modelle")
                     out_dir.mkdir(parents=True, exist_ok=True)
                     base_name = pfad_teil.stem
                     m_export = trimesh.util.concatenate([m_sel, nozzle_markers]) #Exportier das verschobene Mesh und die Kugeln
@@ -903,6 +912,7 @@ if __name__ == "__main__":
                             f"{zielpunkt[0]:.5f}".replace(".", ","),
                             f"{zielpunkt[1]:.5f}".replace(".", ","),
                             f"{zielpunkt[2]:.5f}".replace(".", ","),
+                            f"{werkstueckhoehe_position:.5f}".replace(".", ","),
                             #f"{F_verkippt:.5f}".replace(".", ","),
                             #f"{h_verkippt:.5f}".replace(".", ","),
                             #f"{h_schwerpunkt_pos:.5f}".replace(".", ","),
