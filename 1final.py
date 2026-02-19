@@ -515,15 +515,15 @@ def create_nozzle_cylinders(positions: list[np.ndarray]) -> trimesh.Trimesh | No
 if __name__ == "__main__": 
     #  Pfad zu  STL-Datei  
     pfade = [
-        #Path(r"G:\Andere Computer\Mein Computer (2)\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Qf4i.stl"),
-        #Path(r"G:\Andere Computer\Mein Computer (2)\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Ql4i.stl"),
-        #Path(r"G:\Andere Computer\Mein Computer (2)\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Rk2i.stl"),
-        Path(r"C:\Users\micha\Desktop\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Qf4i.stl"),
-        Path(r"C:\Users\micha\Desktop\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Ql4i.stl"),
-        Path(r"C:\Users\micha\Desktop\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Rk2i.stl"),
+        Path(r"G:\Andere Computer\Mein Computer (2)\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Qf4i.stl"),
+        Path(r"G:\Andere Computer\Mein Computer (2)\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Ql4i.stl"),
+        Path(r"G:\Andere Computer\Mein Computer (2)\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Rk2i.stl"),
+        #Path(r"C:\Users\micha\Desktop\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Qf4i.stl"),
+        #Path(r"C:\Users\micha\Desktop\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Ql4i.stl"),
+        #Path(r"C:\Users\micha\Desktop\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Rk2i.stl"),
     ]
-    #csv_path = Path(r"G:\Andere Computer\Mein Computer (2)\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\kippkraft_tabelle.csv")
-    csv_path = Path(r"C:\Users\micha\Desktop\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\kippkraft_tabelle.csv")
+    csv_path = Path(r"G:\Andere Computer\Mein Computer (2)\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\kippkraft_tabelle.csv")
+    #csv_path = Path(r"C:\Users\micha\Desktop\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\kippkraft_tabelle.csv")
 
      #Pfad der cvs
     with csv_path.open("w", newline="", encoding="utf-8") as csv_file: #Öffnet die Datei und sorgt dafür, dass sie am Ende wieder geschlossen wird
@@ -700,8 +700,8 @@ if __name__ == "__main__":
                         p = np.array(d_marker.pos, dtype=float)
                         nozzle_positions.append(p)
                     nozzle_markers = create_nozzle_cylinders(nozzle_positions) #Erstellt Kugeln statt Zylinder
-                    #out_dir = Path(r"G:\Andere Computer\Mein Computer (2)\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Modelle")
-                    out_dir = Path(r"C:\Users\micha\Desktop\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Modelle")
+                    out_dir = Path(r"G:\Andere Computer\Mein Computer (2)\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Modelle")
+                    #out_dir = Path(r"C:\Users\micha\Desktop\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Modelle")
                     out_dir.mkdir(parents=True, exist_ok=True)
                     base_name = pfad_teil.stem
                     m_export = trimesh.util.concatenate([m_sel, nozzle_markers]) #Exportier das verschobene Mesh und die Kugeln
@@ -835,7 +835,15 @@ if __name__ == "__main__":
                         e_k_ab = kab / kante_len1 #Normiert Richtungsvektor der Achse. nkab Einheits-Richtungsvektor
                         m_eig = m_sel.mass_properties #Zieht die Masseeigenschaften aus dem Mesh (Volumen, Traegheit, Schwerpunkt)
                         tm = m_eig["inertia"] * rho #Traeheitsmatrix um den Schwerpunkt mit der Dichte skaliert
-                        mass = m_eig["volume"] * rho #Masse
+                        #mass = m_eig["volume"] * rho #Masse
+                        if pfad_teil.name in {"Qf4i.stl", "Of4i.stl"}:
+                            mass = 0.04567  # 45,67 g in kg
+                        elif pfad_teil.name in {"Ql4i.stl", "Ol4i.stl"}:
+                            mass =   0.03251 
+                        elif pfad_teil.name == "Rk2i.stl":
+                            mass =  0.00943
+                        else:
+                            raise ValueError(f"Keine feste Masse fuer Bauteil definiert: {pfad_teil.name}")
 
                         schwerpunkt_ka = schwerpunkt_pos - ka #Vektor vom Achsenpunkt ka zum Schwerpunkt
                         schwerpunkt_ka_senk = schwerpunkt_ka - np.dot(schwerpunkt_ka, e_k_ab) * e_k_ab #Entfernt den Anteil von schwerpunkt_ka der in Achsrichtung zeigt, gibt den senkrechten Anteil (Abstand zur Achse) zurück
