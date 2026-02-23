@@ -545,7 +545,8 @@ if __name__ == "__main__":
             #"Impulskraft_alterHoehenunterschied_t0_20s",
             "alter Hoehenunterschied",
             "alte y-Koordinate des Schwerpunkts nach dem Kippen",
-            "Distanz zwischen der Duse und des Schwerpunktes",
+            "x_distanz_duese_schwerpunkt",
+            "z_distanz_duese_schwerpunkt",
             #"schwerpunkt2_kippachse_abstand",
             #"h_ziel",
             #"Impulskraft_max",<
@@ -819,20 +820,15 @@ if __name__ == "__main__":
 
                         #Berechnung des Distanz zwischen der finalduse und der Schwerpunktes
                         x_duese = float(finalduse["duse"].pos[0])
-                        y_duese = float(finalduse["duse"].pos[1])
+                        z_duese = float(finalduse["duse"].pos[2])
                         x_schwerpunkt = float(schwerpunkt_pos[0])
-                        y_schwerpunkt = float(schwerpunkt_pos[1])
-                        x_distanz_duese_schwerpunkt = abs(x_duese - x_schwerpunkt)
-                        y_distanz_duese_schwerpunkt = abs(y_duese - y_schwerpunkt)
+                        z_schwerpunkt = float(schwerpunkt_pos[2])
+                        x_distanz_duese_schwerpunkt = x_duese - x_schwerpunkt
+                        z_distanz_duese_schwerpunkt = z_duese - z_schwerpunkt
                          
 
                          
-                        if kipp_in in {"u_z_n"}:
-                            distanz = x_distanz_duese_schwerpunkt
-
-                        if kipp_in in {"u_x_n"}:
-                           distanz = y_distanz_duese_schwerpunkt 
-
+                        
 
 
 
@@ -986,7 +982,8 @@ if __name__ == "__main__":
                             #f"{impulskraefte_alt[0.20]:.5f}".replace(".", ","),
                             f"{h_alt:.5f}".replace(".", ","),
                             f"{schwerpunkt_pos2[1]:.5f}".replace(".", ","),
-                            f"{distanz:.5f}".replace(".", ","),
+                            f"{x_distanz_duese_schwerpunkt:.5f}".replace(".", ","),
+                            f"{z_distanz_duese_schwerpunkt:.5f}".replace(".", ","),
                             #f"{schwerpunkt2_kippachse_abstand:.5f}".replace(".", ","),
                             #f"{h_ziel:.5f}".replace(".", ","),
                             #f"{F_ziel_t:.5f}".replace(".", ","),
