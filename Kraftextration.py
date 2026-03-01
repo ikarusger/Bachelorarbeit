@@ -7,7 +7,9 @@ from pathlib import Path
 # Linux/Mac: "/home/user/messdaten/kraft"
 # Netzwerk: r"\\SERVER\Freigabe\Messdaten"
 # =========================
-DATA_DIR = Path(r"G:\Andere Computer\Mein Computer (2)\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Versuchsdaten (1)\Kraftmessdose\1")
+#DATA_DIR = Path(r"G:\Andere Computer\Mein Computer (2)\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Versuchsdaten (1)\Kraftmessdose\1")
+DATA_DIR = Path(r"C:\Users\micha\Desktop\Bachelorarbeit\Programmierung\Cad Modelle\Dasha Modelle\Versuchsdaten (1)\Kraftmessdose\1")
+
 
 EXPECTED_STOESSE = 10      # es gab 10 Kraftstöße
 BIN_SIZE_S = 1.0           # Abstand 1 Sekunde
